@@ -1,0 +1,119 @@
+object MainForm: TMainForm
+  Left = 518
+  Height = 416
+  Top = 278
+  Width = 456
+  Caption = 'Клиент для работы с БД'
+  ClientHeight = 396
+  ClientWidth = 456
+  Menu = MainMenu
+  OnCloseQuery = FormCloseQuery
+  OnShow = FormShow
+  LCLVersion = '1.0.6.0'
+  object PanelTools: TPanel
+    Left = 0
+    Height = 42
+    Top = 0
+    Width = 456
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 42
+    ClientWidth = 456
+    TabOrder = 0
+    object ToggleBoxConnect: TToggleBox
+      Left = 8
+      Height = 24
+      Top = 8
+      Width = 122
+      Caption = 'Подключиться к БД'
+      OnChange = ToggleBoxConnectChange
+      TabOrder = 0
+    end
+  end
+  object ListTable: TListView
+    Left = 0
+    Height = 354
+    Top = 42
+    Width = 138
+    Align = alLeft
+    AutoSort = False
+    Columns = <>
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 1
+    OnSelectItem = ListTableSelectItem
+  end
+  object PanelGrid: TPanel
+    Left = 138
+    Height = 354
+    Top = 42
+    Width = 318
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'Вы не подключены к БД'
+    ClientHeight = 354
+    ClientWidth = 318
+    Font.Height = -19
+    ParentFont = False
+    TabOrder = 2
+    object DBGrid: TDBGrid
+      Left = 0
+      Height = 354
+      Top = 0
+      Width = 318
+      Align = alClient
+      AutoFillColumns = True
+      Color = clWindow
+      Columns = <>
+      Font.Height = -13
+      ParentFont = False
+      ReadOnly = True
+      Scrollbars = ssAutoBoth
+      TabOrder = 0
+      TitleFont.Height = -13
+      Visible = False
+    end
+  end
+  object IBConnection: TIBConnection
+    Connected = False
+    LoginPrompt = False
+    KeepConnection = False
+    LogEvents = []
+    left = 176
+    top = 160
+  end
+  object SQLTransaction: TSQLTransaction
+    Active = False
+    Action = caNone
+    left = 272
+    top = 160
+  end
+  object SQLQuery: TSQLQuery
+    FieldDefs = <>
+    Params = <>
+    left = 176
+    top = 232
+  end
+  object Datasource: TDatasource
+    left = 272
+    top = 232
+  end
+  object MainMenu: TMainMenu
+    left = 176
+    top = 104
+    object MenuItemFile: TMenuItem
+      Caption = 'Файл'
+      object MenuItemExit: TMenuItem
+        Caption = 'Выход'
+        OnClick = MenuItemExitClick
+      end
+    end
+    object MenuItemHelp: TMenuItem
+      Caption = 'Справка'
+      object MenuItemAbout: TMenuItem
+        Caption = 'О программе'
+        OnClick = MenuItemAboutClick
+      end
+    end
+  end
+end
