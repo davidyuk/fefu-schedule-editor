@@ -1,24 +1,25 @@
-object MainForm: TMainForm
-  Left = 518
-  Height = 416
-  Top = 278
-  Width = 456
+object FormMain: TFormMain
+  Left = 108
+  Height = 656
+  Top = 173
+  Width = 762
   Caption = 'Клиент для работы с БД'
-  ClientHeight = 396
-  ClientWidth = 456
+  ClientHeight = 636
+  ClientWidth = 762
   Menu = MainMenu
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
+  Position = poDefault
   LCLVersion = '1.0.6.0'
   object PanelTools: TPanel
     Left = 0
     Height = 42
     Top = 0
-    Width = 456
+    Width = 762
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 456
+    ClientWidth = 762
     TabOrder = 0
     object ToggleBoxConnect: TToggleBox
       Left = 8
@@ -30,77 +31,69 @@ object MainForm: TMainForm
       TabOrder = 0
     end
   end
-  object ListTable: TListView
+  object StatusBar: TStatusBar
     Left = 0
-    Height = 354
-    Top = 42
-    Width = 138
-    Align = alLeft
-    AutoSort = False
-    Columns = <>
-    ReadOnly = True
-    ScrollBars = ssAutoBoth
-    TabOrder = 1
-    OnSelectItem = ListTableSelectItem
+    Height = 23
+    Top = 613
+    Width = 762
+    Panels = <    
+      item
+        Text = 'БД не подключена'
+        Width = 50
+      end>
+    SimplePanel = False
   end
-  object PanelGrid: TPanel
-    Left = 138
-    Height = 354
+  object PanelForms: TPanel
+    Left = 174
+    Height = 571
     Top = 42
-    Width = 318
+    Width = 588
     Align = alClient
     BevelOuter = bvNone
-    Caption = 'Вы не подключены к БД'
-    ClientHeight = 354
-    ClientWidth = 318
-    Font.Height = -19
-    ParentFont = False
+    BorderWidth = 1
+    BorderStyle = bsSingle
+    Color = clGradientInactiveCaption
+    ParentColor = False
     TabOrder = 2
-    object DBGrid: TDBGrid
-      Left = 0
-      Height = 354
-      Top = 0
-      Width = 318
-      Align = alClient
-      AutoFillColumns = True
-      Color = clWindow
-      Columns = <>
-      Font.Height = -13
-      ParentFont = False
-      ReadOnly = True
-      Scrollbars = ssAutoBoth
-      TabOrder = 0
-      TitleFont.Height = -13
-      Visible = False
-    end
+    OnResize = PanelFormsResize
+  end
+  object TreeView: TTreeView
+    Left = 0
+    Height = 571
+    Top = 42
+    Width = 169
+    Align = alLeft
+    AutoExpand = True
+    DefaultItemHeight = 18
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 3
+    OnSelectionChanged = TreeViewSelectionChanged
+    Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+  end
+  object Splitter: TSplitter
+    Left = 169
+    Height = 571
+    Top = 42
+    Width = 5
   end
   object IBConnection: TIBConnection
     Connected = False
     LoginPrompt = False
     KeepConnection = False
     LogEvents = []
-    left = 176
-    top = 160
+    left = 544
+    top = 200
   end
   object SQLTransaction: TSQLTransaction
     Active = False
     Action = caNone
-    left = 272
-    top = 160
-  end
-  object SQLQuery: TSQLQuery
-    FieldDefs = <>
-    Params = <>
-    left = 176
-    top = 232
-  end
-  object Datasource: TDatasource
-    left = 272
-    top = 232
+    left = 544
+    top = 312
   end
   object MainMenu: TMainMenu
-    left = 176
-    top = 104
+    left = 424
+    top = 200
     object MenuItemFile: TMenuItem
       Caption = 'Файл'
       object MenuItemExit: TMenuItem

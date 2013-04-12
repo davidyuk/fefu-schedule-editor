@@ -41,20 +41,33 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="2">
+    <Units Count="4">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="DBClient"/>
       </Unit0>
       <Unit1>
-        <Filename Value="form.pas"/>
+        <Filename Value="clformmain.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="MainForm"/>
+        <ComponentName Value="FormMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="Form"/>
+        <UnitName Value="CLFormMain"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="clformtable.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormTable"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="CLFormTable"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="claddparts.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLAddParts"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

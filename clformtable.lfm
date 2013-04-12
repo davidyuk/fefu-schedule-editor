@@ -1,0 +1,81 @@
+object FormTable: TFormTable
+  Left = 100
+  Height = 300
+  Top = 100
+  Width = 300
+  Caption = 'Таблица'
+  ClientHeight = 300
+  ClientWidth = 300
+  OnChangeBounds = FormChangeBounds
+  OnClose = FormClose
+  OnShow = FormShow
+  LCLVersion = '1.0.6.0'
+  object DBGrid: TDBGrid
+    Left = 0
+    Height = 267
+    Top = 0
+    Width = 300
+    Align = alClient
+    AutoEdit = False
+    AutoFillColumns = True
+    BorderStyle = bsNone
+    Color = clWindow
+    Columns = <>
+    Scrollbars = ssAutoBoth
+    TabOrder = 0
+  end
+  object PanelTools: TPanel
+    Left = 0
+    Height = 33
+    Top = 267
+    Width = 300
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 33
+    ClientWidth = 300
+    TabOrder = 1
+    object ButtonCreate: TButton
+      Left = 3
+      Height = 27
+      Top = 3
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 3
+      Caption = 'Добавить'
+      OnClick = ButtonCreateClick
+      TabOrder = 0
+    end
+    object ButtonEdit: TButton
+      Left = 81
+      Height = 27
+      Top = 3
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 3
+      Caption = 'Изменить'
+      OnClick = ButtonEditClick
+      TabOrder = 1
+    end
+    object ButtonRemove: TButton
+      Left = 159
+      Height = 27
+      Top = 3
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 3
+      Caption = 'Удалить'
+      OnClick = ButtonRemoveClick
+      TabOrder = 2
+    end
+  end
+  object Datasource: TDatasource
+    left = 144
+    top = 96
+  end
+  object SQLQuery: TSQLQuery
+    FieldDefs = <>
+    Params = <>
+    left = 72
+    top = 96
+  end
+end
