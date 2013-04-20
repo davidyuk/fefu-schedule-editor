@@ -7,7 +7,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, CLFormMain, CLFormTable, CLAddParts
+  Forms, CLFormMain, CLFormTable, CLFormContainer, CLFormChild,
+  CLDatabase, CLBooks, CLFormEdit
   { you can add units after this };
 
 {$R *.res}
@@ -15,8 +16,11 @@ uses
 begin
   //RequireDerivedFormResource := True;
   Application.Initialize;
+
+  Database := TDatabase.Create();
+  Books := TBooks.Create();
+
   Application.CreateForm(TFormMain, FormMain);
-  //Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.
 

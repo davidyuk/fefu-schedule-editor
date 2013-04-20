@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<document name="Редактор расписания">
+  <book name="Расписание занятий">
+    <table>schedule_items</table>
+    <get_query>SELECT si.id, d.name as "День недели", ti.name as "Время", g.name as "Группа", c.name as "Название дисциплины", p.name as "Номер аудитории", te.name as "Преподаватель" FROM schedule_items si
+INNER JOIN courses c ON si.course_id = c.id
+INNER JOIN teachers te ON si.teacher_id = te.id
+INNER JOIN places p ON si.place_id = p.id
+INNER JOIN times ti ON si.time_id = ti.id
+INNER JOIN days d ON si.day_id = d.id
+INNER JOIN groups g ON si.group_id = g.id
+ORDER BY d.id, ti.id, g.id</get_query>
+    <columns>17;84;67;47;132;105;197</columns>
+  </book>
+  <book name="Расписание занятий 2">
+    <table>schedule_items</table>
+    <get_query>SELECT si.id, d.name as "День недели", ti.name as "Время", g.name as "Группа", c.name as "Название дисциплины", p.name as "Номер аудитории", te.name as "Преподаватель" FROM schedule_items si
+INNER JOIN courses c ON si.course_id = c.id
+INNER JOIN teachers te ON si.teacher_id = te.id
+INNER JOIN places p ON si.place_id = p.id
+INNER JOIN times ti ON si.time_id = ti.id
+INNER JOIN days d ON si.day_id = d.id
+INNER JOIN groups g ON si.group_id = g.id
+ORDER BY d.id, ti.id, g.id</get_query>
+    <columns>35;10;15;3;53;20;20</columns>
+  </book>
+  <book name="Дисциплины">
+    <table>courses</table>
+    <get_query>SELECT * ;</get_query>
+    <columns>35;10;15;3;53;20;20</columns>
+  </book>
+</document>

@@ -1,0 +1,57 @@
+inherited FormEdit: TFormEdit
+  Left = 642
+  Height = 243
+  Top = 205
+  Width = 349
+  Caption = 'Редактирование поля'
+  ClientHeight = 243
+  ClientWidth = 349
+  OnShow = FormShow
+  object Panel: TPanel[0]
+    Left = 0
+    Height = 34
+    Top = 209
+    Width = 349
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 34
+    ClientWidth = 349
+    ParentColor = False
+    TabOrder = 0
+    object ButtonSave: TButton
+      Left = 5
+      Height = 24
+      Top = 5
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 5
+      Caption = 'Сохранить'
+      OnClick = ButtonSaveClick
+      TabOrder = 0
+    end
+    object ButtonCancel: TButton
+      Left = 85
+      Height = 24
+      Top = 5
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 5
+      Caption = 'Отмена'
+      OnClick = ButtonCancelClick
+      TabOrder = 1
+    end
+  end
+  object ScrollBox1: TScrollBox[1]
+    Left = 0
+    Height = 209
+    Top = 0
+    Width = 349
+    HorzScrollBar.Page = 349
+    VertScrollBar.Page = 209
+    Align = alClient
+    BorderStyle = bsNone
+    Color = clWhite
+    ParentColor = False
+    TabOrder = 1
+  end
+end

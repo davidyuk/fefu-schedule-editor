@@ -1,40 +1,42 @@
-object FormTable: TFormTable
-  Left = 100
+inherited FormTable: TFormTable
+  Left = 320
   Height = 300
-  Top = 100
-  Width = 300
+  Top = 149
+  Width = 400
   Caption = 'Таблица'
   ClientHeight = 300
-  ClientWidth = 300
-  OnChangeBounds = FormChangeBounds
+  ClientWidth = 400
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 400
   OnClose = FormClose
   OnShow = FormShow
   LCLVersion = '1.0.6.0'
-  object DBGrid: TDBGrid
+  object DBGrid: TDBGrid[0]
     Left = 0
     Height = 267
     Top = 0
-    Width = 300
+    Width = 400
     Align = alClient
     AutoEdit = False
-    AutoFillColumns = True
     BorderStyle = bsNone
     Color = clWindow
     Columns = <>
+    Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
     Scrollbars = ssAutoBoth
     TabOrder = 0
+    OnColumnSized = DBGridColumnSized
   end
-  object PanelTools: TPanel
+  object PanelEdit: TPanel[1]
     Left = 0
     Height = 33
     Top = 267
-    Width = 300
+    Width = 400
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 33
-    ClientWidth = 300
+    ClientWidth = 400
     TabOrder = 1
-    object ButtonCreate: TButton
+    object ButtonAdd: TButton
       Left = 3
       Height = 27
       Top = 3
@@ -42,7 +44,7 @@ object FormTable: TFormTable
       Align = alLeft
       BorderSpacing.Around = 3
       Caption = 'Добавить'
-      OnClick = ButtonCreateClick
+      OnClick = ButtonAddClick
       TabOrder = 0
     end
     object ButtonEdit: TButton
@@ -67,12 +69,35 @@ object FormTable: TFormTable
       OnClick = ButtonRemoveClick
       TabOrder = 2
     end
+    object ButtonFilterAdd: TSpeedButton
+      Left = 374
+      Height = 27
+      Top = 3
+      Width = 23
+      Align = alRight
+      BorderSpacing.Around = 3
+      Caption = '+'
+      Flat = True
+      NumGlyphs = 0
+      OnClick = ButtonFilterAddClick
+    end
+    object ButtonFind: TButton
+      Left = 296
+      Height = 27
+      Top = 3
+      Width = 75
+      Align = alRight
+      BorderSpacing.Around = 3
+      Caption = 'Найти'
+      OnClick = ButtonFindClick
+      TabOrder = 3
+    end
   end
-  object Datasource: TDatasource
+  object Datasource: TDatasource[2]
     left = 144
     top = 96
   end
-  object SQLQuery: TSQLQuery
+  object SQLQuery: TSQLQuery[3]
     FieldDefs = <>
     Params = <>
     left = 72
