@@ -10,17 +10,17 @@ uses
 
 type
 
-  CTFormChild = class of TFormChild;
-
   { TFormContainer }
 
   TFormContainer = class
     private
-      forms: array of TFormChild;
-      function Search(text: string): integer;
+      Forms: array of TFormChild;
+      MDIParent: TForm;
+      function Search(Key: string): integer;
     public
-      procedure AddForm(key: string; tform: CTFormChild);
+      procedure AddForm(FormChild: TFormChild);
       procedure Clear;
+      constructor Create(AMDIParent: TForm);
   end;
 
 var
@@ -30,36 +30,47 @@ implementation
 
 { TFormContainer }
 
-procedure TFormContainer.AddForm(key: string; tform: CTFormChild);
-var
-  Form: TFormChild;
+procedure TFormContainer.AddForm(FormChild: TFormChild);
 begin
-  if search(key) = -1 Then begin
-    Form := tform.Create(Application, key);//tform.Create(key);
-    //Form.Parent := Application;
-    setLength(forms, length(forms)+1);
-    forms[high(forms)] := Form;
-    Form.Show();
-  end else
-    forms[search(key)].BringToFront;
+  if search(FormChild.Key) = -1 Then begin
+    //FormChild.Parent := MDIParent;
+    setLength(Forms, length(Forms)+1);
+    Forms[high(Forms)] := FormChild;
+    FormChild.Show();
+  end else begin
+    Forms[search(FormChild.Key)].Show;
+    Forms[search(FormChild.Key)].BringToFront;
+    FreeAndNil(FormChild);
+  end;
+{
+ есть ещё вариант с использованием массива (как в ф-и format) в аргументе
+ конструктора, единственный минус в том, что невозможно будет определить,
+ не открывая описание конструктора, порядок и значение элементов массива
+}
 end;
 
 procedure TFormContainer.Clear;
 var i: integer;
 begin
-  for i:= 0 to high(forms) do begin
-    forms[i].Close;
-    FreeAndNil(forms[i]);
+  for i:= 0 to high(Forms) do begin
+    Forms[i].Close;
+    FreeAndNil(Forms[i]);
   end;
-  setlength(forms, 0);
+  setlength(Forms, 0);
 end;
 
-function TFormContainer.Search(text: string): integer;
+constructor TFormContainer.Create(AMDIParent: TForm);
+begin
+  inherited Create;
+  MDIParent := AMDIParent;
+end;
+
+function TFormContainer.Search(Key: string): integer;
 var i: integer;
 begin
   result := -1;
-  for i := 0 to high(forms) do
-    if forms[i].Key = text Then result := i;
+  for i := 0 to high(Forms) do
+    if Forms[i].Key = Key Then result := i;
 end;
 
 end.

@@ -1,7 +1,7 @@
 object FormMain: TFormMain
-  Left = 228
+  Left = 159
   Height = 656
-  Top = 297
+  Top = 210
   Width = 762
   Caption = 'Клиент для работы с БД'
   ClientHeight = 636
@@ -63,11 +63,11 @@ object FormMain: TFormMain
     Width = 169
     Align = alLeft
     AutoExpand = True
-    DefaultItemHeight = 16
+    DefaultItemHeight = 18
     ReadOnly = True
     ScrollBars = ssAutoBoth
     TabOrder = 3
-    OnSelectionChanged = TreeViewSelectionChanged
+    OnClick = TreeViewClick
     Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
   object Splitter: TSplitter

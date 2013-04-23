@@ -21,8 +21,9 @@ type
     procedure ButtonSaveClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
-    { private declarations }
+    BookId, RecordId: Integer;
   public
+    constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
   end;
 
 implementation
@@ -40,6 +41,14 @@ end;
 procedure TFormEdit.FormShow(Sender: TObject);
 begin
 
+end;
+
+constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
+begin
+  inherited Create(TheOwner);
+  BookId := ABookId;
+  RecordId := ARecordId;
+  FKey:= 'book_id: '+IntToStr(BookId)+';record_id: '+IntToStr(RecordId);
 end;
 
 procedure TFormEdit.ButtonCancelClick(Sender: TObject);

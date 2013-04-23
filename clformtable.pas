@@ -11,6 +11,12 @@ uses
 
 type
 
+  FilterPanel = Record
+    Panel: TPanel;
+    CBKind, CBField: TComboBox;
+    Edit: TEdit;
+  end;
+
   { TFormTable }
 
   TFormTable = class(TFormChild)
@@ -32,9 +38,15 @@ type
     procedure FormShow(Sender: TObject);
     procedure ButtonFilterAddClick(Sender: TObject);
     procedure ButtonFilterRemoveClick(Sender: TObject);
+    const
+      FilterTypesName: array[0..4] of string = ('Больше', 'Меньше', 'Равно', 'Начинается с', 'Содержит');
+      FilterTypesValues: array[0..4] of string = ('> ":filter"', '< ":filter"', '= ":filter"', 'LIKE ":filter%"', 'LIKE "%:filter%"');
     private
-      filter: array of TPanel;
-      bookId: integer;
+      FilterPanels: array of FilterPanel;
+      FilterFieldsName: array of string;
+      BookId: integer;
+    public
+      constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
   end;
 
 implementation
@@ -44,8 +56,10 @@ implementation
 { TFormTable }
 
 procedure TFormTable.ButtonAddClick(Sender: TObject);
+var Form: TFormEdit;
 begin
-  FormContainer.AddForm(sGetParamFromKey(0)+';n-1', TFormEdit);
+  Form := TFormEdit.Create(Application, BookId, -1);
+  FormContainer.AddForm(Form);
 end;
 
 procedure TFormTable.ButtonFilterAddClick(Sender: TObject);
@@ -54,66 +68,96 @@ var
   SBRemove: TSpeedButton;
   CBKind, CBField: TComboBox;
   Edit: TEdit;
-  i: Integer;
+  i, n: Integer;
 begin
-  if length(filter)>20 Then exit;
-  setLength(filter, length(filter)+1);
+  if length(FilterPanels)>20 Then exit;
+  setLength(FilterPanels, length(FilterPanels)+1);
+  n:= High(FilterPanels);
+
   Panel := TPanel.Create(TSpeedButton(Sender).Parent.Parent);
   Panel.Parent := TSpeedButton(Sender).Parent.Parent;
   Panel.BevelOuter:=bvNone;
   Panel.Align:=alBottom;
-  //Panel.BorderSpacing.InnerBorder:=3;
-  CBKind := TComboBox.Create(Panel); CBKind.Parent := Panel;
+  Panel.Height := 29;
+  FilterPanels[n].Panel := Panel;
+  //Panel.BorderSpacing.InnerBorder:=3; не работает:(
+
+  CBKind := TComboBox.Create(Panel);
+  CBKind.Parent := Panel;
   CBKind.Align:=alLeft;
   CBKind.ReadOnly:=True;
   CBKind.BorderSpacing.Around := 3;
-  CBKind.Items.Add('Больше');
-  CBKind.Items.Add('Меньше');
-  CBKind.Items.Add('Равно');
-  CBKind.Items.Add('Начинается с');
-  CBKind.Items.Add('Содержит');
-  CBField := TComboBox.Create(Panel); CBField.Parent := Panel;
+  for i:= 0 to high(FilterTypesValues) do
+     CBKind.Items.Add(FilterTypesName[i]);
+  FilterPanels[n].CBKind := CBKind;
+
+
+  CBField := TComboBox.Create(Panel);
+  CBField.Parent := Panel;
   CBField.Align:=alLeft;
   CBField.ReadOnly:=True;
   CBField.BorderSpacing.Around := 3;
-  for i:= 0 to high(Books.TableFields[bookId]) do
-    CBField.Items.Add(Books.TableFields[bookId, i]);
+  CBField.Width := 120;
+  for i:= 0 to high(FilterFieldsName) do
+    CBField.Items.Add(FilterFieldsName[i]);
+  FilterPanels[n].CBField := CBField;
+
   Edit := TEdit.Create(Panel);
   Edit.Parent := Panel;
   Edit.Align:=alClient;
   Edit.BorderSpacing.Around := 3;
-  Panel.Height := 29;
+  FilterPanels[n].Edit := Edit;
+
   SBRemove := TSpeedButton.Create(Panel); SBRemove.Parent := Panel;
   SBRemove.Caption:= 'X';
   SBRemove.Flat:=True;
   SBRemove.Align:= alRight;
   SBRemove.OnClick:= @ButtonFilterRemoveClick;
   SBRemove.BorderSpacing.Around := 3;
-
-  filter[high(filter)] := Panel;
-
 end;
 
 procedure TFormTable.ButtonFilterRemoveClick(Sender: TObject);
 var i: integer;
 begin
-  if length(filter) = 1 Then exit;
-  for i:= 0 to high(filter) do
-    if filter[i] = TSpeedButton(Sender).Parent Then begin
-      freeAndNil(filter[i]);
-      filter[i]:= filter[high(filter)];
+  if length(FilterPanels) = 1 Then exit;
+  for i:= 0 to high(FilterPanels) do
+    if FilterPanels[i].Panel = TSpeedButton(Sender).Parent Then begin
+      freeAndNil(FilterPanels[i].Panel);
+      FilterPanels[i]:= FilterPanels[high(FilterPanels)];
     end;
-  setLength(filter, length(filter)-1);
+  setLength(FilterPanels, length(FilterPanels)-1);
+end;
+
+constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
+begin
+  inherited Create(TheOwner);
+  BookId:= ABookId;
+  FKey:= 'book_id: '+IntToStr(BookId);
+  setLength(FilterPanels, 0);
+  Datasource.DataSet := SQLQuery;
+  DBGrid.DataSource := Datasource;
+  SQLQuery.Transaction := Database.Transaction;
 end;
 
 procedure TFormTable.ButtonEditClick(Sender: TObject);
+var Form: TFormEdit;
 begin
-  FormContainer.AddForm(sGetParamFromKey(0)+';n'+intToStr(DBGrid.SelectedIndex), TFormEdit);
+  Form := TFormEdit.Create(Application, BookId, DBGrid.SelectedIndex);
+  FormContainer.AddForm(Form);
 end;
 
 procedure TFormTable.ButtonFindClick(Sender: TObject);
+var
+  i: integer;
+  s: string;
 begin
-
+  s := '';
+  for i:= 0 to High(FilterPanels) do with FilterPanels[i] do begin
+    if (CBField.ItemIndex = -1) or (CBKind.ItemIndex = -1) or (Edit.Text = '') Then continue;
+    s += FilterFieldsName[CBField.ItemIndex]+' ';
+    s += FilterTypesValues[CBKind.ItemIndex]+' ';
+  end;
+  ShowMessage(s);
 end;
 
 
@@ -124,15 +168,15 @@ begin
   //DBGrid.SelectedRows.Count;
   //if MessageDlg('Подтверждение удаления записи', 'Вы действительно хотите удалить "'+
   //intToStr(DBGrid.SelectedField.FieldNo)+'"?', mtWarning, mbOKCancel, 0) = mrOK Then
-  //  SQLQuery.DeleteSQL.Text := 'DELETE * from '+Books.Table[bookId]+
+  //  SQLQuery.DeleteSQL.Text := 'DELETE * from '+Books.Table[BookId]+
   //  ' WHERE id = '+intToStr(DBGrid.SelectedIndex);
 end;
 
 procedure TFormTable.DBGridColumnSized(Sender: TObject);
 var i: integer;
 begin
-  for i:= 0 to High(Books.Columns[bookId]) do
-    Books.Columns[bookId, i]:= DBGrid.Columns.Items[i].Width;
+  for i:= 0 to High(Books.Columns[BookId]) do
+    Books.Columns[BookId, i]:= DBGrid.Columns.Items[i].Width;
 end;
 
 procedure TFormTable.FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -145,18 +189,16 @@ end;
 procedure TFormTable.FormShow(Sender: TObject);
 var i: integer;
 begin
-  bookId := iGetParamFromKey(0);
-  setLength(filter, 0);
-  ButtonFilterAddClick(ButtonFilterAdd);
-  Datasource.DataSet := SQLQuery;
-  DBGrid.DataSource := Datasource;
-  SQLQuery.Transaction := Database.Transaction;
-  SQLQuery.SQL.Text:=Books.Query[bookId];
-  Caption:= Books.Name[bookId];
+  SQLQuery.SQL.Text:=Books.Query[BookId];
+  Caption:= Books.Name[BookId];
   SQLQuery.Open;
   Datasource.Enabled := True;
-  for i:= 0 to High(Books.Columns[bookId]) do
-    DBGrid.Columns.Items[i].Width:=Books.Columns[bookId, i];
+  setLength(FilterFieldsName, Datasource.DataSet.Fields.Count);
+  for i:= 0 to Datasource.DataSet.Fields.Count-1 do
+    FilterFieldsName[i] := Datasource.DataSet.Fields.Fields[i].FieldName;
+  if length(FilterPanels) = 0 Then ButtonFilterAddClick(ButtonFilterAdd);
+  for i:= 0 to High(Books.Columns[BookId]) do
+    DBGrid.Columns.Items[i].Width:=Books.Columns[BookId, i];
 end;
 
 end.

@@ -29,7 +29,7 @@ type
     procedure MenuItemAboutClick(Sender: TObject);
     procedure MenuItemExitClick(Sender: TObject);
     procedure ToggleBoxConnectChange(Sender: TObject);
-    procedure TreeViewSelectionChanged(Sender: TObject);
+    procedure TreeViewClick(Sender: TObject);
   private
     TreeRootQuery: TTreeNode;
   public
@@ -47,7 +47,7 @@ implementation
 
 procedure TFormMain.FormShow(Sender: TObject);
 begin
-  FormContainer := TFormContainer.Create();
+  FormContainer := TFormContainer.Create(FormMain);
 end;
 
 procedure TFormMain.ToggleBoxConnectChange(Sender: TObject);
@@ -75,11 +75,21 @@ begin
   end;
 end;
 
-procedure TFormMain.TreeViewSelectionChanged(Sender: TObject);
+procedure TFormMain.TreeViewClick(Sender: TObject);
+var
+  Point: TPoint;
+  Form: TFormTable;
 begin
-  if TreeView.Enabled and (TreeView.Selected.Parent = TreeRootQuery) Then
-    FormContainer.AddForm('b'+intToStr(Integer(TreeView.Selected.Data)), TFormTable);
+  Point := ScreenToClient(Mouse.CursorPos);
+  Point.X -= TreeView.Left;
+  Point.Y -= TreeView.Top;
+  if TreeView.GetNodeAt(Point.X, Point.Y) = Nil Then exit;
+  if TreeView.Selected.Parent = TreeRootQuery Then begin
+    Form:= TFormTable.Create(Application, Integer(TreeView.Selected.Data));
+    FormContainer.AddForm(Form);
+  end;
 end;
+
 //
 procedure TFormMain.MenuItemAboutClick(Sender: TObject);
 begin
