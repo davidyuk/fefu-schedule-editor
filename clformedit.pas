@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, DbCtrls,
-  ExtCtrls, StdCtrls, CLFormChild;
+  ExtCtrls, StdCtrls, CLFormChild, sqldb, db, CLBooks;
 
 type
 
@@ -15,8 +15,11 @@ type
   TFormEdit = class(TFormChild)
     ButtonSave: TButton;
     ButtonCancel: TButton;
+    Datasource: TDatasource;
+    DBLookupComboBox1: TDBLookupComboBox;
     Panel: TPanel;
-    ScrollBox1: TScrollBox;
+    ScrollBox: TScrollBox;
+    SQLQuery: TSQLQuery;
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonSaveClick(Sender: TObject);
     procedure FormShow(Sender: TObject);

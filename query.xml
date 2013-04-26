@@ -1,32 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <document name="Редактор расписания">
-  <book name="Расписание занятий">
-    <table>schedule_items</table>
-    <get_query>SELECT si.id, d.name as "День недели", ti.name as "Время", g.name as "Группа", c.name as "Название дисциплины", p.name as "Номер аудитории", te.name as "Преподаватель" FROM schedule_items si
+  <book name="Расписание занятий" table="schedule_items">
+    <sql>si.id, d.name, ti.name, g.name, c.name, p.name, te.name FROM schedule_items si
 INNER JOIN courses c ON si.course_id = c.id
 INNER JOIN teachers te ON si.teacher_id = te.id
 INNER JOIN places p ON si.place_id = p.id
 INNER JOIN times ti ON si.time_id = ti.id
 INNER JOIN days d ON si.day_id = d.id
 INNER JOIN groups g ON si.group_id = g.id
-ORDER BY d.id, ti.id, g.id</get_query>
-    <columns>17;84;67;47;132;105;197</columns>
-  </book>
-  <book name="Расписание занятий 2">
-    <table>schedule_items</table>
-    <get_query>SELECT si.id, d.name as "День недели", ti.name as "Время", g.name as "Группа", c.name as "Название дисциплины", p.name as "Номер аудитории", te.name as "Преподаватель" FROM schedule_items si
-INNER JOIN courses c ON si.course_id = c.id
-INNER JOIN teachers te ON si.teacher_id = te.id
-INNER JOIN places p ON si.place_id = p.id
-INNER JOIN times ti ON si.time_id = ti.id
-INNER JOIN days d ON si.day_id = d.id
-INNER JOIN groups g ON si.group_id = g.id
-ORDER BY d.id, ti.id, g.id</get_query>
-    <columns>35;10;15;3;53;20;20</columns>
-  </book>
-  <book name="Дисциплины">
-    <table>courses</table>
-    <get_query>SELECT * ;</get_query>
-    <columns>35;10;15;3;53;20;20</columns>
+/*ORDER BY d.id, ti.id, g.id*/</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="si.id" table="" width="17"/>
+      <column disp="День недели" kind="str" name="day_id" jname="d.name" table="days" width="84"/>
+      <column disp="Время" kind="str" name="time_id" jname="ti.name" table="times" width="67"/>
+      <column disp="Группа" kind="str" name="group_id" jname="g.name" table="groups" width="49"/>
+      <column disp="Название дисциплины" kind="str" name="course_id" jname="c.name" table="courses" width="155"/>
+      <column disp="Номер аудитории" kind="str" name="place_id" jname="p.name" table="places" width="116"/>
+      <column disp="Преподаватель" kind="str" name="teacher_id" jname="te.name" table="teachers" width="198"/>
+    </columns>
   </book>
 </document>

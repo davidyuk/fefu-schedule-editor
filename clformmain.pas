@@ -59,8 +59,8 @@ begin
     Database.Connected := true;
     TreeView.Enabled := True;
     TreeRootQuery := TreeView.Items.Add(nil, 'Справочники');
-    for i:= 0 to high(Books.Name) do begin
-      t := TreeView.Items.AddChild(TreeRootQuery, Books.Name[i]);
+    for i:= 0 to high(Books.Book) do begin
+      t := TreeView.Items.AddChild(TreeRootQuery, Books.Book[i].name);
       t.Data := Pointer(i); //запоминаем номер справочника
     end;
     StatusBar.Panels.Items[0].Text := 'Подключено';

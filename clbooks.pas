@@ -5,29 +5,37 @@ unit CLBooks;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Dialogs, sqldb, DOM, XMLRead, XMLWrite,
-  CLFormChild, CLFormEdit;
+  Classes, SysUtils, Forms, Dialogs, DOM, XMLRead, XMLWrite;
 
 type
-  ArrOfString = array of string;
-  ArrOfArrOfString = array of array of string;
-  ArrOfArrOfInteger = array of array of integer;
+  TDBValueType = (tInt, tStr);
+
+  TColumn = record
+    kind: TDBValueType;
+    {имя в таблице, имя в объединённой таблице, связанная таблица, отображаемое имя}
+    name, jname, table, disp: string;
+    width: integer;
+  end;
+
+  TBook = record
+    name, table, sql: string;
+    Columns: array of TColumn;
+  end;
+
+  ArrOfTBook = array of TBook;
+  ArrOfTColumn = array of TColumn;
 
   { TBooks }
 
   TBooks = class
+  const
+    DBValueInXML: array [0..1] of string = ('int', 'str');
   private
-    FName, FQuery, FTable: ArrOfString;
-    FTableFields: ArrOfArrOfString;
-    FColumns: ArrOfArrOfInteger;
+    FBooks: array of TBook;
     FTitle: String;
   public
-    property Name: ArrOfString read FName;
-    property Query: ArrOfString read FQuery;
-    property Table: ArrOfString read FTable;
+    property Book: ArrOfTBook read FBooks write FBooks;
     property Title: string read FTitle;
-    property Columns: ArrOfArrOfInteger read FColumns write FColumns;
-    property TableFields: ArrOfArrOfString read FTableFields;// write FColumns;
     constructor Create();
     destructor Destroy(); override;
   end;
@@ -43,56 +51,49 @@ constructor TBooks.Create;
 var
   inp: TXMLDocument;
   Node1, Node2: TDOMNode;
-  s: string;
-  j, k: integer;
+  j: integer;
+
+procedure readColumns();
+var
+  i, k, l: integer;
+  Node: TDOMNode;
 begin
-  ReadXMLFile(inp, 'query.xml');
+  Node := Node2.FirstChild;
+  k := 0;
+  while Node <> Nil do begin
+    setLength(FBooks[j].Columns, k+1);
+    for i:= 0 to Node.Attributes.Length-1 do
+      case Node.Attributes[i].NodeName of
+        'name': FBooks[j].Columns[k].name:=UTF8Encode(Node.Attributes[i].TextContent);
+        'jname': FBooks[j].Columns[k].jname:=UTF8Encode(Node.Attributes[i].TextContent);
+        'kind':
+          for l:= 0 to high(DBValueInXML) do
+            if DBValueInXML[l] = UTF8Encode(Node.Attributes[i].TextContent) then
+              FBooks[j].Columns[k].kind := TDBValueType(l);
+        'table': FBooks[j].Columns[k].table:=UTF8Encode(Node.Attributes[i].TextContent);
+        'disp': FBooks[j].Columns[k].disp:=UTF8Encode(Node.Attributes[i].TextContent);
+        'width': FBooks[j].Columns[k].width:=StrToInt(UTF8Encode(Node.Attributes[i].TextContent));
+      end;
+    Node := Node.NextSibling;
+    inc(k);
+  end;
+end;
+
+begin
   try
+    ReadXMLFile(inp, 'query.xml');
     FTitle := UTF8Encode(inp.DocumentElement.Attributes.Item[0].TextContent);
     Node1 := inp.DocumentElement.FirstChild;
     j:= 0;
     while Node1 <> nil do begin
-      setLength(FName, j+1);
-      setLength(FQuery, j+1);
-      setLength(FTable, j+1);
-      setLength(FColumns, j+1);
-      setLength(FTableFields, j+1);
-      FName[j] := UTF8Encode(Node1.Attributes[0].TextContent);
+      setLength(FBooks, j+1);
+      FBooks[j].name := UTF8Encode(Node1.Attributes[0].TextContent);
+      FBooks[j].table := UTF8Encode(Node1.Attributes[1].TextContent);
       Node2 := Node1.FirstChild;
       while Node2 <> Nil do begin
         case Node2.NodeName of
-          'table': FTable[j]:= UTF8Encode(Node2.TextContent);
-          'get_query': FQuery[j]:= UTF8Encode(Node2.TextContent);
-          'columns': begin
-              s := Node2.TextContent;
-              k:= 0;
-              while s <> '' do begin
-                setLength(FColumns[j], k+1);
-                if Pos(';', s) = 0 Then begin
-                  FColumns[j][k] := strToInt(s);
-                  break;
-                end else begin
-                  FColumns[j][k] := strToInt(copy(s, 1, Pos(';', s)-1));
-                  delete(s, 1, Pos(';', s));
-                end;
-                inc(k);
-              end;
-            end;
-          'columns_name': begin
-              s := Node2.TextContent;
-              k:= 0;
-              while s <> '' do begin
-                setLength(FTableFields[j], k+1);
-                if Pos(';', s) = 0 Then begin
-                  FTableFields[j][k] := s;
-                  break;
-                end else begin
-                  FTableFields[j][k] := copy(s, 1, Pos(';', s)-1);
-                  delete(s, 1, Pos(';', s));
-                end;
-                inc(k);
-              end;
-            end;
+          'sql': FBooks[j].sql:= UTF8Encode(Node2.TextContent);
+          'columns': readColumns;
         end;
         Node2:= Node2.NextSibling;
       end;
@@ -106,35 +107,37 @@ begin
     end;
   end;
   FreeAndNil(inp);
-  FreeAndNil(Node1);
-  FreeAndNil(Node2);
 end;
 
 destructor TBooks.Destroy;
 var
   outp: TXMLDocument;
-  Node1, Node2, Node3: TDOMElement;
-  s: string;
+  Node1, Node2, Node3, Node4: TDOMElement;
   i, j: integer;
 begin
   outp:= TXMLDocument.Create;
   Node1 := outp.CreateElement('document');
-  Node1.SetAttribute('name', UTF8Decode(FTitle));
-  for i:= 0 to high(FName) do begin
+  Node1.SetAttribute('name',UTF8Decode(FTitle));
+  for i:= 0 to high(FBooks) do begin
     Node2:= outp.CreateElement('book');
-    Node2.SetAttribute('name', UTF8Decode(FName[i]));
+    Node2.SetAttribute('name', UTF8Decode(FBooks[i].name));
+    Node2.SetAttribute('table', UTF8Decode(FBooks[i].table));
 
-    Node3:= outp.CreateElement('table');
-    Node3.TextContent:= UTF8Decode(FTable[i]);
+    Node3:= outp.CreateElement('sql');
+    Node3.TextContent:= UTF8Decode(FBooks[i].sql);
     Node2.AppendChild(Node3);
-    Node3:= outp.CreateElement('get_query');
-    Node3.TextContent:= UTF8Decode(FQuery[i]);
-    Node2.AppendChild(Node3);
-    s:= '';
-    for j:= 0 to high(FColumns[i]) do
-      s += intToStr(Columns[i, j])+';';
+
     Node3:= outp.CreateElement('columns');
-    Node3.TextContent:= UTF8Decode(copy(s, 1, length(s)-1));
+    for j:= 0 to high(FBooks[i].Columns) do begin
+      Node4 := outp.CreateElement('column');
+      Node4.SetAttribute('name', UTF8Decode(FBooks[i].Columns[j].name));
+      Node4.SetAttribute('jname', UTF8Decode(FBooks[i].Columns[j].jname));
+      Node4.SetAttribute('kind', UTF8Decode(DBValueInXML[Integer(FBooks[i].Columns[j].kind)]));
+      Node4.SetAttribute('table', UTF8Decode(FBooks[i].Columns[j].table));
+      Node4.SetAttribute('disp', UTF8Decode(FBooks[i].Columns[j].disp));
+      Node4.SetAttribute('width', UTF8Decode(intToStr(FBooks[i].Columns[j].width)));
+      Node3.AppendChild(Node4);
+    end;
     Node2.AppendChild(Node3);
 
     Node1.AppendChild(Node2);

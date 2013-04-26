@@ -5,7 +5,7 @@ unit CLFilter;
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, StdCtrls, Controls, Buttons, db;
+  Classes, SysUtils, ExtCtrls, StdCtrls, Controls, Buttons, CLBooks;
 
 type
 
@@ -22,21 +22,21 @@ type
   TFilterTypesContainer = class
   const
     StringCaption: array[0..2] of string = ('Равно', 'Начинается с', 'Содержит');
-    StringValue: array[0..2] of string = ('= "?"', 'LIKE "?%"', 'LIKE "%?%"');
+    StringValue: array[0..2] of string = ('= ? ', 'LIKE ?%', 'LIKE %?%');
     IntegerCaption: array[0..2] of string = ('Больше', 'Меньше', 'Равно');
-    IntegerValue: array[0..2] of string = ('> "?"', '< "?"', '= "?"');
+    IntegerValue: array[0..2] of string = ('> ? ', '< ? ', '= ? ');
     //TypesName: array[0..4] of string = ('Больше', 'Меньше', 'Равно', 'Начинается с', 'Содержит');
-    //TypesValues: array[0..4] of string = ('> "?"', '< "?"', '= "?"', 'LIKE "?%"', 'LIKE "%?%"');
+    //TypesValues: array[0..4] of string = ('> ?', '< ?', '= ?', 'LIKE ?%', 'LIKE %?%');
   public
-    function GetCaption(FieldType: TFieldType): arrOfString;
-    function GetValue(FieldType: TFieldType): arrOfString;
+    function GetCaption(DBValueType: TDBValueType): arrOfString;
+    function GetValue(DBValueType: TDBValueType): arrOfString;
   end;
 
   { TFilter }
 
   TFilter = class
   private
-    FFields: Tfields;
+    FColumns: array of TColumn;
     //FieldsName: array of string;
     Panels: array of FilterPanel;
     procedure ButtonRemoveClick(Sender: TObject);
@@ -44,7 +44,7 @@ type
   public
     procedure AddPanel(Parent: TWinControl);
     function GetSQL: arrOfString;
-    constructor Create(AFields: TFields);
+    constructor Create(AColumns: ArrOfTColumn);
   end;
 
 var
@@ -54,19 +54,20 @@ implementation
 
 { TFilterTypesContainer }
 
-function TFilterTypesContainer.GetCaption(FieldType: TFieldType): arrOfString;
+function TFilterTypesContainer.GetCaption(DBValueType: TDBValueType
+  ): arrOfString;
 begin
-  case FieldType of
-    ftString: result := StringCaption;
-    ftInteger: result := IntegerCaption;
+  case DBValueType of
+    tStr: result := StringCaption;
+    tInt: result := IntegerCaption;
   end;
 end;
 
-function TFilterTypesContainer.GetValue(FieldType: TFieldType): arrOfString;
+function TFilterTypesContainer.GetValue(DBValueType: TDBValueType): arrOfString;
 begin
-  case FieldType of
-    ftString: result := StringValue;
-    ftInteger: result := IntegerValue;
+  case DBValueType of
+    tStr: result := StringValue;
+    tInt: result := IntegerValue;
   end;
 end;
 
@@ -111,8 +112,8 @@ begin
   CBField.ReadOnly:=True;
   CBField.BorderSpacing.Around := 3;
   CBField.Width := 120;
-  for i:= 0 to FFields.Count-1 do
-    CBField.Items.Add(FFields.Fields[i].FieldName);
+  for i:= 0 to high(FColumns) do
+    CBField.Items.Add(FColumns[i].disp);
   CBField.Tag := n;
   CBField.OnChange:=@CBFieldChange;
   Panels[n].CBField := CBField;
@@ -136,14 +137,14 @@ procedure TFilter.CBFieldChange(Sender: TObject);
 var
   i: integer;
   cb: TComboBox;
-  tf: TFieldType;
+  tf: TDBValueType;
 begin
   cb := TComboBox(Sender);
-  for i:= 0 to FFields.Count-1 do
-    if FFields.Fields[i].FieldName = cb.Text Then break;
+  for i:= 0 to high(FColumns) do
+    if FColumns[i].disp = cb.Text Then break;
   Panels[cb.Tag].CBKind.Enabled:= True;
   Panels[cb.Tag].CBKind.Clear;
-  tf := FFields.Fields[i].DataType;
+  tf := FColumns[i].kind;
   for i:= 0 to High(FTypes.GetCaption(tf)) do
     Panels[cb.Tag].CBKind.AddItem(FTypes.GetCaption(tf)[i], TObject(IntPtr(tf)));
 end;
@@ -163,7 +164,7 @@ end;
 function TFilter.GetSQL: arrOfString;
 var
   i, k, t: integer;
-  s, st: string;
+  s, st, pref, suff: string;
 begin
   s := '';
   k := 0;
@@ -171,20 +172,33 @@ begin
   for i:= 0 to High(Panels) do with Panels[i] do begin
     if (CBField.ItemIndex = -1) or (CBKind.ItemIndex = -1) or (Edit.Text = '') Then continue;
     if k <> 0 Then st := ' AND ';
-    s += st+'"'+FFields.Fields[CBField.ItemIndex].FieldName+'" ';
+    s += st+FColumns[CBField.ItemIndex].jname+' ';
     t:= CBKind.ItemIndex;
-    s += FTypes.GetValue(TFieldType(IntPtr(CBKind.Items.Objects[t])))[t];
+    st := FTypes.GetValue(TDBValueType(IntPtr(CBKind.Items.Objects[t])))[t];
+    t:= Pos('?', st);
+    if st[t+1] <> ' ' then begin
+      suff:=st[t+1];
+      delete(st, t+1, 1);
+    end else suff := '';
+    if st[t-1] <> ' ' then begin
+      dec(t);
+      pref:=st[t];
+      delete(st, t, 1);
+    end else pref := '';
+    Delete(st, t, 1);
+    Insert(':P'+intToStr(k), st, t);
+    s += st;
     inc(k);
-    result[k] := Edit.Text;
+    result[k] := pref+Edit.Text+suff;
   end;
   setLength(result, k+1);
   result[0] := s;
 end;
 
-constructor TFilter.Create(AFields: TFields);
+constructor TFilter.Create(AColumns: ArrOfTColumn);
 begin
   setLength(Panels, 0);
-  FFields := AFields;
+  FColumns := AColumns;
 end;
 
 initialization
