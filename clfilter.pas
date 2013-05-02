@@ -37,14 +37,14 @@ type
   TFilter = class
   private
     FColumns: array of TColumn;
-    //FieldsName: array of string;
+    FParent: TWinControl;
     Panels: array of FilterPanel;
     procedure ButtonRemoveClick(Sender: TObject);
     procedure CBFieldChange(Sender: TObject);
   public
-    procedure AddPanel(Parent: TWinControl);
+    procedure AddPanel;
     function GetSQL: arrOfString;
-    constructor Create(AColumns: ArrOfTColumn);
+    constructor Create(AColumns: ArrOfTColumn; AParent: TWinControl);
   end;
 
 var
@@ -73,7 +73,7 @@ end;
 
 { TFilter }
 
-procedure TFilter.AddPanel(Parent: TWinControl);
+procedure TFilter.AddPanel;
 var
   Panel: TPanel;
   SBRemove: TSpeedButton;
@@ -85,8 +85,8 @@ begin
   setLength(Panels, length(Panels)+1);
   n:= High(Panels);
 
-  Panel := TPanel.Create(Parent);
-  Panel.Parent := Parent;
+  Panel := TPanel.Create(FParent);
+  Panel.Parent := FParent;
   Panel.BevelOuter:=bvNone;
   Panel.Align:=alBottom;
   Panel.Height := 29;
@@ -121,6 +121,7 @@ begin
   Edit := TEdit.Create(Panel);
   Edit.Parent := Panel;
   Edit.Align:=alClient;
+  Edit.Caption:= 'qwest:(';
   Edit.BorderSpacing.Around := 3;
   Edit.Tag := n;
   Panels[n].Edit := Edit;
@@ -152,7 +153,12 @@ end;
 procedure TFilter.ButtonRemoveClick(Sender: TObject);
 var i: integer;
 begin
-  if length(Panels) = 1 Then exit;
+  if length(Panels) = 1 Then begin
+    Panels[0].CBField.ItemIndex := -1;
+    Panels[0].CBKind.ItemIndex := -1;
+    Panels[0].Edit.Text := '';
+    exit;
+  end;
   for i:= 0 to high(Panels) do
     if Panels[i].Panel = TSpeedButton(Sender).Parent Then begin
       freeAndNil(Panels[i].Panel);
@@ -195,10 +201,12 @@ begin
   result[0] := s;
 end;
 
-constructor TFilter.Create(AColumns: ArrOfTColumn);
+constructor TFilter.Create(AColumns: ArrOfTColumn; AParent: TWinControl);
 begin
   setLength(Panels, 0);
   FColumns := AColumns;
+  FParent := AParent;
+  AddPanel;
 end;
 
 initialization

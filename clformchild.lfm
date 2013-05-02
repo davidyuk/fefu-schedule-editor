@@ -1,7 +1,8 @@
 object FormChild: TFormChild
-  Left = 9
+  Left = 249
   Height = 240
-  Top = 7
+  Top = 137
   Width = 320
+  OnChangeBounds = FormChangeBounds
   LCLVersion = '1.0.6.0'
 end

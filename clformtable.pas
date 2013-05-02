@@ -30,11 +30,9 @@ type
     procedure ButtonFilterFindClick(Sender: TObject);
     procedure ButtonRemoveClick(Sender: TObject);
     procedure DBGridColumnSized(Sender: TObject);
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure ButtonFilterAddClick(Sender: TObject);
     private
-      BookId: integer;
       Filter: TFilter;
       procedure UpdateColumns;
     public
@@ -56,7 +54,7 @@ end;
 
 procedure TFormTable.ButtonFilterAddClick(Sender: TObject);
 begin
-  Filter.AddPanel(TSpeedButton(Sender).Parent.Parent);
+  Filter.AddPanel;
 end;
 
 procedure TFormTable.UpdateColumns;
@@ -73,12 +71,14 @@ end;
 constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
 begin
   inherited Create(TheOwner);
-  BookId:= ABookId;
-  FKey:= 'book_id: '+IntToStr(BookId);
-
+  FBookId:= ABookId;
+  FRecordId:= -1;
   Datasource.DataSet := SQLQuery;
   DBGrid.DataSource := Datasource;
   SQLQuery.Transaction := Database.Transaction;
+  Datasource.Enabled := True;
+  Caption:= Books.Book[BookId].name;
+  Filter := TFilter.Create(Books.Book[BookId].Columns, Self);
 end;
 
 procedure TFormTable.ButtonEditClick(Sender: TObject);
@@ -148,21 +148,8 @@ begin
     Books.Book[BookId].Columns[i].width := DBGrid.Columns.Items[i].Width;
 end;
 
-procedure TFormTable.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-  SQLQuery.Close;
-end;
-
 procedure TFormTable.FormShow(Sender: TObject);
 begin
-  SQLQuery.SQL.Text:='SELECT '+Books.Book[BookId].sql;
-  SQLQuery.Open;
-  Datasource.Enabled := True;
-  Caption:= Books.Book[BookId].name;
-
-  Filter := TFilter.Create(Books.Book[BookId].Columns);
-  Filter.AddPanel(ButtonFilterAdd.Parent.Parent);
-
   ButtonFilterCancelClick(Nil);
 end;
 

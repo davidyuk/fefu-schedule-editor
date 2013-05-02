@@ -16,10 +16,6 @@ uses
 begin
   //RequireDerivedFormResource := True;
   Application.Initialize;
-
-  Database := TDatabase.Create();
-  Books := TBooks.Create();
-
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;
 end.

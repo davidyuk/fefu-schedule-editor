@@ -19,4 +19,53 @@ INNER JOIN groups g ON si.group_id = g.id
       <column disp="Преподаватель" kind="str" name="teacher_id" jname="te.name" table="teachers" width="198"/>
     </columns>
   </book>
+  <book name="День недели" table="days">
+    <sql>id, name FROM days</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="День недели" kind="str" name="name" jname="name" table="" width="84"/>
+    </columns>
+  </book>
+  <book name="Время" table="times">
+    <sql>id, name FROM times</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Время" kind="str" name="name" jname="name" table="" width="67"/>
+    </columns>
+  </book>
+  <book name="Группы" table="groups">
+    <sql>id, name FROM groups</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Группа" kind="str" name="name" jname="name" table="" width="49"/>
+    </columns>
+  </book>
+  <book name="Дисциплины" table="courses">
+    <sql>id, name FROM courses</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Название дисциплины" kind="str" name="name" jname="name" table="" width="155"/>
+    </columns>
+  </book>
+  <book name="Расписание занятий" table="places">
+    <sql>id, name FROM places</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Номер аудитории" kind="str" name="name" jname="name" table="" width="116"/>
+    </columns>
+  </book>
+  <book name="Аудитории" table="places">
+    <sql>id, name FROM places</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Номер аудитории" kind="str" name="name" jname="name" table="" width="116"/>
+    </columns>
+  </book>
+  <book name="Преподаватели" table="teachers">
+    <sql>id, name FROM teachers</sql>
+    <columns>
+      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
+      <column disp="Преподаватель" kind="str" name="name" jname="name" table="" width="198"/>
+    </columns>
+  </book>
 </document>

@@ -28,7 +28,7 @@ type
   { TBooks }
 
   TBooks = class
-  const
+  private const
     DBValueInXML: array [0..1] of string = ('int', 'str');
   private
     FBooks: array of TBook;
@@ -102,7 +102,7 @@ begin
     end;
   except
     on E: Exception do begin
-      MessageDlg('Произошла ошибка при открытии файла:'+#13#10+E.Message, mtError,  [mbOK], 0);
+      MessageDlg('Произошла ошибка при открытии файла параметров.'+#13#10+E.Message, mtError,  [mbOK], 0);
       Application.Terminate;
     end;
   end;
@@ -144,7 +144,16 @@ begin
   end;
   outp.AppendChild(Node1);
   WriteXMLFile(outp, 'query.xml');
+  FreeAndNil(outp);
 end;
+
+initialization
+
+  Books := TBooks.Create();
+
+finalization
+
+  FreeAndNil(Books);
 
 end.
 

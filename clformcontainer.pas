@@ -15,12 +15,12 @@ type
   TFormContainer = class
     private
       Forms: array of TFormChild;
-      MDIParent: TForm;
-      function Search(Key: string): integer;
+      FMDIParent: TWinControl;
     public
       procedure AddForm(FormChild: TFormChild);
+      procedure UpdateSize;
       procedure Clear;
-      constructor Create(AMDIParent: TForm);
+      constructor Create(AMDIParent: TWinControl);
   end;
 
 var
@@ -32,21 +32,17 @@ implementation
 
 procedure TFormContainer.AddForm(FormChild: TFormChild);
 begin
-  if search(FormChild.Key) = -1 Then begin
-    //FormChild.Parent := MDIParent;
-    setLength(Forms, length(Forms)+1);
-    Forms[high(Forms)] := FormChild;
-    FormChild.Show();
-  end else begin
-    Forms[search(FormChild.Key)].Show;
-    Forms[search(FormChild.Key)].BringToFront;
-    FreeAndNil(FormChild);
-  end;
-{
- есть ещё вариант с использованием массива (как в ф-и format) в аргументе
- конструктора, единственный минус в том, что невозможно будет определить,
- не открывая описание конструктора, порядок и значение элементов массива
-}
+  //FormChild.Parent := FMDIParent;
+  setLength(Forms, length(Forms)+1);
+  Forms[high(Forms)] := FormChild;
+  FormChild.Show();
+end;
+
+procedure TFormContainer.UpdateSize;
+var i: integer;
+begin
+  for i:= 0 to High(Forms) do
+    Forms[i].UpdateSize;
 end;
 
 procedure TFormContainer.Clear;
@@ -59,19 +55,15 @@ begin
   setlength(Forms, 0);
 end;
 
-constructor TFormContainer.Create(AMDIParent: TForm);
+constructor TFormContainer.Create(AMDIParent: TWinControl);
 begin
   inherited Create;
-  MDIParent := AMDIParent;
+  FMDIParent := AMDIParent;
 end;
 
-function TFormContainer.Search(Key: string): integer;
-var i: integer;
-begin
-  result := -1;
-  for i := 0 to high(Forms) do
-    if Forms[i].Key = Key Then result := i;
-end;
+finalization
+
+  FreeAndNil(FormContainer);
 
 end.
 

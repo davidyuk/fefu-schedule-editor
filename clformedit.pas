@@ -22,9 +22,8 @@ type
     SQLQuery: TSQLQuery;
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonSaveClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
-  private
-    BookId, RecordId: Integer;
   public
     constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
   end;
@@ -41,17 +40,28 @@ begin
 
 end;
 
-procedure TFormEdit.FormShow(Sender: TObject);
+procedure TFormEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  CloseAction:= caFree;
+end;
 
+procedure TFormEdit.FormShow(Sender: TObject);
+var
+  i: integer;
+  p: TPanel;
+  e: TEdit;
+  c: TComboBox;
+begin
+  for i:= 0 to high(Books.Book[BookId].Columns) do begin
+    //Books.Book[BookId].Columns[i].
+  end;
 end;
 
 constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
 begin
   inherited Create(TheOwner);
-  BookId := ABookId;
-  RecordId := ARecordId;
-  FKey:= 'book_id: '+IntToStr(BookId)+';record_id: '+IntToStr(RecordId);
+  FBookId := ABookId;
+  FRecordId := ARecordId;
 end;
 
 procedure TFormEdit.ButtonCancelClick(Sender: TObject);

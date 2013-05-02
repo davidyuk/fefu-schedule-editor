@@ -1,13 +1,14 @@
 inherited FormEdit: TFormEdit
-  Left = 385
+  Left = 463
   Height = 243
-  Top = 283
+  Top = 375
   Width = 349
   Caption = 'Редактирование поля'
   ClientHeight = 243
   ClientWidth = 349
   Constraints.MinHeight = 100
   Constraints.MinWidth = 100
+  OnClose = FormClose
   OnShow = FormShow
   object Panel: TPanel[0]
     Left = 0

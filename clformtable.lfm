@@ -1,25 +1,24 @@
 inherited FormTable: TFormTable
-  Left = 145
-  Height = 381
-  Top = 323
-  Width = 702
+  Left = 117
+  Height = 200
+  Top = 216
+  Width = 450
   Caption = 'Таблица'
-  ClientHeight = 381
-  ClientWidth = 702
-  Constraints.MinHeight = 300
-  Constraints.MinWidth = 400
-  OnClose = FormClose
+  ClientHeight = 200
+  ClientWidth = 450
+  Constraints.MinHeight = 200
+  Constraints.MinWidth = 450
   OnShow = FormShow
+  Position = poDefault
   object DBGrid: TDBGrid[0]
     Left = 0
-    Height = 348
+    Height = 167
     Top = 0
-    Width = 702
+    Width = 450
     Align = alClient
     BorderStyle = bsNone
     Color = clWindow
     Columns = <>
-    FixedCols = 2
     Scrollbars = ssAutoBoth
     TabOrder = 0
     OnColumnSized = DBGridColumnSized
@@ -27,12 +26,12 @@ inherited FormTable: TFormTable
   object PanelEdit: TPanel[1]
     Left = 0
     Height = 33
-    Top = 348
-    Width = 702
+    Top = 167
+    Width = 450
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 33
-    ClientWidth = 702
+    ClientWidth = 450
     TabOrder = 1
     object ButtonAdd: TButton
       Left = 3
@@ -68,7 +67,7 @@ inherited FormTable: TFormTable
       TabOrder = 2
     end
     object ButtonFilterAdd: TSpeedButton
-      Left = 676
+      Left = 424
       Height = 27
       Top = 3
       Width = 23
@@ -80,7 +79,7 @@ inherited FormTable: TFormTable
       OnClick = ButtonFilterAddClick
     end
     object ButtonFilterFind: TButton
-      Left = 598
+      Left = 346
       Height = 27
       Top = 3
       Width = 75
@@ -91,7 +90,7 @@ inherited FormTable: TFormTable
       TabOrder = 3
     end
     object ButtonFilterCancel: TButton
-      Left = 527
+      Left = 275
       Height = 27
       Top = 3
       Width = 68

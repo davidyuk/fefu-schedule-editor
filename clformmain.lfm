@@ -1,7 +1,7 @@
 object FormMain: TFormMain
-  Left = 159
+  Left = 299
   Height = 656
-  Top = 210
+  Top = 159
   Width = 762
   Caption = 'Клиент для работы с БД'
   ClientHeight = 636
@@ -43,19 +43,6 @@ object FormMain: TFormMain
       end>
     SimplePanel = False
   end
-  object PanelForms: TPanel
-    Left = 174
-    Height = 571
-    Top = 42
-    Width = 588
-    Align = alClient
-    BevelOuter = bvNone
-    BorderWidth = 1
-    BorderStyle = bsSingle
-    Color = clGradientInactiveCaption
-    ParentColor = False
-    TabOrder = 2
-  end
   object TreeView: TTreeView
     Left = 0
     Height = 571
@@ -66,7 +53,7 @@ object FormMain: TFormMain
     DefaultItemHeight = 18
     ReadOnly = True
     ScrollBars = ssAutoBoth
-    TabOrder = 3
+    TabOrder = 2
     OnClick = TreeViewClick
     Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
@@ -75,6 +62,21 @@ object FormMain: TFormMain
     Height = 571
     Top = 42
     Width = 5
+  end
+  object PanelForms: TPanel
+    Left = 174
+    Height = 571
+    Top = 42
+    Width = 588
+    Align = alClient
+    BevelOuter = bvNone
+    BorderWidth = 1
+    BorderStyle = bsSingle
+    Color = 16446445
+    ParentColor = False
+    TabOrder = 4
+    Visible = False
+    OnResize = PanelFormsResize
   end
   object MainMenu: TMainMenu
     left = 424

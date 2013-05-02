@@ -5,7 +5,7 @@ unit CLDatabase;
 interface
 
 uses
-  Classes, SysUtils, sqldb, db, IBConnection;
+  Classes, SysUtils, sqldb, db, IBConnection, Dialogs;
 
 type
 
@@ -36,8 +36,15 @@ begin
   if FConnected=AValue then Exit;
   FConnected:=AValue;
   If FConnected Then begin
-    FConnection.Connected := True;
-    FTransaction.Active := True;
+    try
+      FConnection.Connected := True;
+      FTransaction.Active := True;
+    except
+      on E: Exception do begin
+        MessageDlg('Ошибка','Невозможно подключиться к базе данных'+#13#10+E.Message, mtError, [mbOK], 0);
+        FConnected := False;
+      end;
+    end;
   end else begin
     FTransaction.Active := False;
     FConnection.Connected := False;
@@ -62,6 +69,10 @@ begin
   FreeAndNil(FConnection);
   inherited Destroy;
 end;
+
+initialization
+
+  Database := TDatabase.Create();
 
 end.
 
