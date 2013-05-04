@@ -1,13 +1,15 @@
 object FormMain: TFormMain
-  Left = 299
-  Height = 656
-  Top = 159
-  Width = 762
+  Left = 177
+  Height = 300
+  Top = 158
+  Width = 200
   Caption = 'Клиент для работы с БД'
-  ClientHeight = 636
-  ClientWidth = 762
+  ClientHeight = 280
+  ClientWidth = 200
+  Constraints.MaxWidth = 220
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 180
   Menu = MainMenu
-  OnCloseQuery = FormCloseQuery
   OnShow = FormShow
   Position = poDefault
   LCLVersion = '1.0.6.0'
@@ -15,11 +17,11 @@ object FormMain: TFormMain
     Left = 0
     Height = 42
     Top = 0
-    Width = 762
+    Width = 200
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 762
+    ClientWidth = 200
     TabOrder = 0
     object ToggleBoxConnect: TToggleBox
       Left = 8
@@ -34,8 +36,8 @@ object FormMain: TFormMain
   object StatusBar: TStatusBar
     Left = 0
     Height = 23
-    Top = 613
-    Width = 762
+    Top = 257
+    Width = 200
     Panels = <    
       item
         Text = 'БД не подключена'
@@ -45,10 +47,10 @@ object FormMain: TFormMain
   end
   object TreeView: TTreeView
     Left = 0
-    Height = 571
+    Height = 215
     Top = 42
-    Width = 169
-    Align = alLeft
+    Width = 200
+    Align = alClient
     AutoExpand = True
     DefaultItemHeight = 18
     ReadOnly = True
@@ -57,30 +59,9 @@ object FormMain: TFormMain
     OnClick = TreeViewClick
     Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
-  object Splitter: TSplitter
-    Left = 169
-    Height = 571
-    Top = 42
-    Width = 5
-  end
-  object PanelForms: TPanel
-    Left = 174
-    Height = 571
-    Top = 42
-    Width = 588
-    Align = alClient
-    BevelOuter = bvNone
-    BorderWidth = 1
-    BorderStyle = bsSingle
-    Color = 16446445
-    ParentColor = False
-    TabOrder = 4
-    Visible = False
-    OnResize = PanelFormsResize
-  end
   object MainMenu: TMainMenu
-    left = 424
-    top = 200
+    left = 64
+    top = 88
     object MenuItemFile: TMenuItem
       Caption = 'Файл'
       object MenuItemExit: TMenuItem

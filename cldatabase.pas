@@ -65,6 +65,7 @@ end;
 
 destructor TDatabase.Destroy;
 begin
+  SetConnected(False);
   FreeAndNil(FTransaction);
   FreeAndNil(FConnection);
   inherited Destroy;
@@ -73,6 +74,10 @@ end;
 initialization
 
   Database := TDatabase.Create();
+
+finalization
+
+  FreeAndNil(Database);
 
 end.
 

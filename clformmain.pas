@@ -18,22 +18,19 @@ type
     MenuItemHelp: TMenuItem;
     MenuItemExit: TMenuItem;
     MenuItemAbout: TMenuItem;
-    PanelForms: TPanel;
     PanelTools: TPanel;
-    Splitter: TSplitter;
     StatusBar: TStatusBar;
     ToggleBoxConnect: TToggleBox;
     TreeView: TTreeView;
     procedure FormTableClose(Sender: TObject; var CloseAction: TCloseAction);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormShow(Sender: TObject);
     procedure MenuItemAboutClick(Sender: TObject);
     procedure MenuItemExitClick(Sender: TObject);
-    procedure PanelFormsResize(Sender: TObject);
     procedure ToggleBoxConnectChange(Sender: TObject);
     procedure TreeViewClick(Sender: TObject);
   private
     TreeRootQuery: TTreeNode;
+    FormTableArr: array of TFormTable;
   public
     { public declarations }
   end;
@@ -57,8 +54,7 @@ begin
   b.LoadFromFile('img/b.bmp');
   il.AddMasked(b, clWhite);
   TreeView.Images := il;
-  FormContainer := TFormContainer.Create(FormMain.PanelForms);
-  PanelForms.Visible:= True;
+  FormContainer := TFormContainer.Create();
 end;
 
 procedure TFormMain.ToggleBoxConnectChange(Sender: TObject);
@@ -72,7 +68,8 @@ begin
       ToggleBoxConnect.Checked := false;
       exit;
     end;
-    TreeView.Enabled := True;
+    SetLength(FormTableArr, high(Books.Book)+1);
+    TreeView.Enabled:=True;
     TreeRootQuery := TreeView.Items.Add(nil, 'Справочники');
     for i:= 0 to high(Books.Book) do begin
       t := TreeView.Items.AddChild(TreeRootQuery, Books.Book[i].name);
@@ -81,30 +78,34 @@ begin
     StatusBar.Panels.Items[0].Text := 'Подключено';
     ToggleBoxConnect.Caption := 'Отключиться от БД';
   end else begin
-    Database.Connected := false;
     TreeView.Enabled := False;
     TreeView.Items.Clear;
     StatusBar.Panels.Items[0].Text := 'Нет подключения';
     ToggleBoxConnect.Caption := 'Подключиться к БД';
     FormContainer.Clear;
+    Database.Connected := false;
   end;
 end;
 
 procedure TFormMain.TreeViewClick(Sender: TObject);
 var
-  //Point: TPoint;
   Form: TFormTable;
+  bid: integer;
 begin
-  {Point := ScreenToClient(Mouse.CursorPos);
-  Point.X -= TreeView.Left;
-  Point.Y -= TreeView.Top;
-  if TreeView.GetNodeAt(Point.X, Point.Y) = Nil Then exit;}
+  if not Assigned(TreeView.Selected) Then exit;
   if not Assigned(TreeView.Selected.Parent) Then exit;
   if TreeView.Selected.Parent = TreeRootQuery Then begin
-    Form:= TFormTable.Create(Application, Integer(TreeView.Selected.Data));
-    Form.OnClose:= @FormTableClose;
-    FormContainer.AddForm(Form);
-    TreeView.Selected.ImageIndex:=0;
+    bid := Integer(TreeView.Selected.Data);
+    if (TreeView.Selected.ImageIndex=-1) and (not Assigned(FormTableArr[bid])) Then begin
+      Form:= TFormTable.Create(Application, bid);
+      FormTableArr[bid]:= Form;
+      Form.OnClose:= @FormTableClose;
+      FormContainer.AddForm(Form);
+      TreeView.Selected.ImageIndex:=0;
+    end else begin
+      FormTableArr[bid].Show;
+      FormTableArr[bid].BringToFront;
+    end;
   end;
   TreeView.Selected.Selected:=false;
 end;
@@ -115,7 +116,7 @@ begin
   for i:= 0 to TreeRootQuery.Count-1 do
     if integer(TreeRootQuery.Items[i].Data)=TFormTable(Sender).BookId Then
       TreeRootQuery.Items[i].ImageIndex:=-1;
-  CloseAction:=caFree;
+  //CloseAction:=caFree;
 end;
 
 //
@@ -125,19 +126,9 @@ begin
     'Денис Давидюк Б8103А' + #13#10 + 'май 2013');
 end;
 
-procedure TFormMain.FormCloseQuery(Sender: TObject; var CanClose: boolean);
-begin
-  ToggleBoxConnect.Checked := False;
-end;
-
 procedure TFormMain.MenuItemExitClick(Sender: TObject);
 begin
   FormMain.Close;
-end;
-
-procedure TFormMain.PanelFormsResize(Sender: TObject);
-begin
-  FormContainer.UpdateSize;
 end;
 
 end.

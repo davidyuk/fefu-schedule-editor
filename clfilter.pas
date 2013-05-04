@@ -121,7 +121,7 @@ begin
   Edit := TEdit.Create(Panel);
   Edit.Parent := Panel;
   Edit.Align:=alClient;
-  Edit.Caption:= 'qwest:(';
+  Edit.Caption:= '';
   Edit.BorderSpacing.Around := 3;
   Edit.Tag := n;
   Panels[n].Edit := Edit;

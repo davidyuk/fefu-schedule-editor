@@ -14,6 +14,7 @@ type
   { TFormTable }
 
   TFormTable = class(TFormChild)
+      ButtonFilterAdd: TButton;
     ButtonFilterCancel: TButton;
     ButtonFilterFind: TButton;
     ButtonAdd: TButton;
@@ -22,7 +23,6 @@ type
     Datasource: TDatasource;
     DBGrid: TDBGrid;
     PanelEdit: TPanel;
-    ButtonFilterAdd: TSpeedButton;
     SQLQuery: TSQLQuery;
     procedure ButtonAddClick(Sender: TObject);
     procedure ButtonEditClick(Sender: TObject);
@@ -63,8 +63,6 @@ begin
   for i:= 0 to High(Books.Book[BookId].Columns) do begin
     DBGrid.Columns.Items[i].Width:=Books.Book[BookId].Columns[i].width;
     DBGrid.DataSource.DataSet.Fields[i].DisplayLabel:=Books.Book[BookId].Columns[i].disp;
-    //DBGrid.Columns[i].DisplayFormat:=Books.Book[BookId].Columns[i].disp;
-    //DBGrid.Columns[i].DisplayName:=Books.Book[BookId].Columns[i].disp;
   end;
 end;
 
@@ -104,11 +102,8 @@ begin
   if Filter.GetSQL[0] = '' Then exit;
   SQLQuery.Close;
   SQLQuery.SQL.Text:='SELECT '+Books.Book[BookId].sql+' WHERE '+Filter.GetSQL[0];
-  //ShowMessage(SQLQuery.SQL.Text);
   for i:= 1 to high(Filter.GetSQL) do begin
     SQLQuery.Params.ParamByName('P'+intToStr(i-1)).AsString:=Filter.GetSQL[i];
-    //ShowMessage(Filter.GetSQL[i]+':len:'+intToStr(length(Filter.GetSQL[i])));
-    //ShowMessage(SQLQuery.Params.ParamByName('P'+intToStr(i-1)).AsString);
   end;
   SQLQuery.Open;
   ButtonFilterCancel.Visible:=true;
