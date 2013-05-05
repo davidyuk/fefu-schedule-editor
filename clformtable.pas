@@ -73,7 +73,7 @@ begin
   FRecordId:= -1;
   Datasource.DataSet := SQLQuery;
   DBGrid.DataSource := Datasource;
-  SQLQuery.Transaction := Database.Transaction;
+  SQLQuery.Transaction := Transaction;
   Datasource.Enabled := True;
   Caption:= Books.Book[BookId].name;
   Filter := TFilter.Create(Books.Book[BookId].Columns, Self);
@@ -125,10 +125,10 @@ begin
   if MessageDlg('Подтверждение удаления записи', 'Вы действительно хотите удалить запись?'+
   s, mtWarning, mbOKCancel, 0) = mrOK Then begin
     SQLQueryL := TSQLQuery.Create(Nil);
-    SQLQueryL.Transaction := Database.Transaction;
+    SQLQueryL.Transaction := Transaction;
     SQLQueryL.SQL.Text := 'DELETE from '+Books.Book[BookId].table+' WHERE id = '+id;
     SQLQueryL.ExecSQL;
-    Database.Transaction.Commit;
+    Transaction.Commit;
     FreeAndNil(SQLQueryL);
     //ShowMessage(SQLQuery.SQL.Text);
     SQLQuery.Open;

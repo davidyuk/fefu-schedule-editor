@@ -63,8 +63,14 @@ var
   t: TTreeNode;
 begin
   If ToggleBoxConnect.Checked Then begin
-    Database.Connected := true;
-    if not Database.Connected Then begin
+    try
+      Connection.Connected := True;
+    except
+      on E: Exception do begin
+        MessageDlg('Ошибка','Невозможно подключиться к базе данных'+#13#10+E.Message, mtError, [mbOK], 0);
+      end;
+    end;
+    if not Connection.Connected Then begin
       ToggleBoxConnect.Checked := false;
       exit;
     end;
@@ -83,7 +89,7 @@ begin
     StatusBar.Panels.Items[0].Text := 'Нет подключения';
     ToggleBoxConnect.Caption := 'Подключиться к БД';
     FormContainer.Clear;
-    Database.Connected := false;
+    Connection.Connected := false;
   end;
 end;
 

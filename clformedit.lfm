@@ -10,7 +10,7 @@ inherited FormEdit: TFormEdit
   Constraints.MinWidth = 100
   OnClose = FormClose
   OnShow = FormShow
-  object Panel: TPanel[0]
+  object PanelButtons: TPanel[0]
     Left = 0
     Height = 34
     Top = 460
@@ -53,20 +53,9 @@ inherited FormEdit: TFormEdit
     VertScrollBar.Page = 460
     Align = alClient
     BorderStyle = bsNone
-    ClientHeight = 460
-    ClientWidth = 349
     Color = clWhite
     ParentColor = False
     TabOrder = 1
-    object DBGrid: TDBGrid
-      Left = 72
-      Height = 100
-      Top = 320
-      Width = 200
-      Color = clWindow
-      Columns = <>
-      TabOrder = 0
-    end
   end
   object SQLQuery: TSQLQuery[2]
     FieldDefs = <>

@@ -13,8 +13,6 @@ type
   { TFormChild }
 
   TFormChild = class(TForm)
-  private
-    const MDIMargin = 25;
   protected
     FBookId, FRecordId: integer;
   public
