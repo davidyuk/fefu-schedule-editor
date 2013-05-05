@@ -1,71 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <document name="Редактор расписания">
   <book name="Расписание занятий" table="schedule_items">
-    <sql>si.id, d.name, ti.name, g.name, c.name, p.name, te.name FROM schedule_items si
-INNER JOIN courses c ON si.course_id = c.id
-INNER JOIN teachers te ON si.teacher_id = te.id
-INNER JOIN places p ON si.place_id = p.id
-INNER JOIN times ti ON si.time_id = ti.id
-INNER JOIN days d ON si.day_id = d.id
-INNER JOIN groups g ON si.group_id = g.id
-/*ORDER BY d.id, ti.id, g.id*/</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="si.id" table="" width="17"/>
-      <column disp="День недели" kind="str" name="day_id" jname="d.name" table="days" width="84"/>
-      <column disp="Время" kind="str" name="time_id" jname="ti.name" table="times" width="67"/>
-      <column disp="Группа" kind="str" name="group_id" jname="g.name" table="groups" width="49"/>
-      <column disp="Название дисциплины" kind="str" name="course_id" jname="c.name" table="courses" width="155"/>
-      <column disp="Номер аудитории" kind="str" name="place_id" jname="p.name" table="places" width="116"/>
-      <column disp="Преподаватель" kind="str" name="teacher_id" jname="te.name" table="teachers" width="198"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="День недели" kind="str" name="day_id" table="days" width="84"/>
+      <column disp="Время" kind="str" name="time_id" table="times" width="67"/>
+      <column disp="Группа" kind="str" name="group_id" table="groups" width="49"/>
+      <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="155"/>
+      <column disp="Номер аудитории" kind="str" name="place_id" table="places" width="116"/>
+      <column disp="Преподаватель" kind="str" name="teacher_id" table="teachers" width="198"/>
+    </columns>
+  </book>
+  <book name="Группа - предмет" table="groups_courses">
+    <columns>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Группа" kind="str" name="group_id" table="groups" width="49"/>
+      <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="155"/>
+    </columns>
+  </book>
+  <book name="Преподаватель - предмет" table="teacherss_courses">
+    <columns>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Преподаватель" kind="str" name="teacher_id" table="teachers" width="198"/>
+      <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="155"/>
     </columns>
   </book>
   <book name="День недели" table="days">
-    <sql>id, name FROM days</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="День недели" kind="str" name="name" jname="name" table="" width="84"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="День недели" kind="str" name="name" table="" width="84"/>
     </columns>
   </book>
   <book name="Время" table="times">
-    <sql>id, name FROM times</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Время" kind="str" name="name" jname="name" table="" width="67"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Время" kind="str" name="name" table="" width="67"/>
     </columns>
   </book>
   <book name="Группы" table="groups">
-    <sql>id, name FROM groups</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Группа" kind="str" name="name" jname="name" table="" width="49"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Группа" kind="str" name="name" table="" width="49"/>
+	  <column disp="Количество" kind="int" name="amount" table="" width="20"/>
     </columns>
   </book>
   <book name="Дисциплины" table="courses">
-    <sql>id, name FROM courses</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Название дисциплины" kind="str" name="name" jname="name" table="" width="155"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Название дисциплины" kind="str" name="name" table="" width="155"/>
     </columns>
   </book>
   <book name="Расписание занятий" table="places">
-    <sql>id, name FROM places</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Номер аудитории" kind="str" name="name" jname="name" table="" width="116"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Номер аудитории" kind="str" name="name" table="" width="116"/>
     </columns>
   </book>
   <book name="Аудитории" table="places">
-    <sql>id, name FROM places</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Номер аудитории" kind="str" name="name" jname="name" table="" width="116"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Номер аудитории" kind="str" name="name" table="" width="116"/>
+	  <column disp="Количество" kind="int" name="amount" table="" width="20"/>
     </columns>
   </book>
   <book name="Преподаватели" table="teachers">
-    <sql>id, name FROM teachers</sql>
     <columns>
-      <column disp="ID" kind="int" name="id" jname="id" table="" width="17"/>
-      <column disp="Преподаватель" kind="str" name="name" jname="name" table="" width="198"/>
+      <column disp="ID" kind="int" name="id" table="" width="17"/>
+      <column disp="Преподаватель" kind="str" name="name" table="" width="198"/>
     </columns>
   </book>
 </document>

@@ -12,13 +12,13 @@ type
 
   TColumn = record
     kind: TDBValueType;
-    {имя в таблице, имя в объединённой таблице, связанная таблица, отображаемое имя}
-    name, jname, table, disp: string;
+    {имя в таблице, связанная таблица, отображаемое имя}
+    name, table, disp: string;
     width: integer;
   end;
 
   TBook = record
-    name, table, sql: string;
+    name, table: string;
     Columns: array of TColumn;
   end;
 
@@ -65,7 +65,6 @@ begin
     for i:= 0 to Node.Attributes.Length-1 do
       case Node.Attributes[i].NodeName of
         'name': FBooks[j].Columns[k].name:=UTF8Encode(Node.Attributes[i].TextContent);
-        'jname': FBooks[j].Columns[k].jname:=UTF8Encode(Node.Attributes[i].TextContent);
         'kind':
           for l:= 0 to high(DBValueInXML) do
             if DBValueInXML[l] = UTF8Encode(Node.Attributes[i].TextContent) then
@@ -92,7 +91,6 @@ begin
       Node2 := Node1.FirstChild;
       while Node2 <> Nil do begin
         case Node2.NodeName of
-          'sql': FBooks[j].sql:= UTF8Encode(Node2.TextContent);
           'columns': readColumns;
         end;
         Node2:= Node2.NextSibling;
@@ -123,15 +121,10 @@ begin
     Node2.SetAttribute('name', UTF8Decode(FBooks[i].name));
     Node2.SetAttribute('table', UTF8Decode(FBooks[i].table));
 
-    Node3:= outp.CreateElement('sql');
-    Node3.TextContent:= UTF8Decode(FBooks[i].sql);
-    Node2.AppendChild(Node3);
-
     Node3:= outp.CreateElement('columns');
     for j:= 0 to high(FBooks[i].Columns) do begin
       Node4 := outp.CreateElement('column');
       Node4.SetAttribute('name', UTF8Decode(FBooks[i].Columns[j].name));
-      Node4.SetAttribute('jname', UTF8Decode(FBooks[i].Columns[j].jname));
       Node4.SetAttribute('kind', UTF8Decode(DBValueInXML[Integer(FBooks[i].Columns[j].kind)]));
       Node4.SetAttribute('table', UTF8Decode(FBooks[i].Columns[j].table));
       Node4.SetAttribute('disp', UTF8Decode(FBooks[i].Columns[j].disp));
@@ -153,7 +146,7 @@ initialization
 
 finalization
 
-  FreeAndNil(Books);
+  Books.Free;
 
 end.
 

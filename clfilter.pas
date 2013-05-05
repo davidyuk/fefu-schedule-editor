@@ -178,7 +178,7 @@ begin
   for i:= 0 to High(Panels) do with Panels[i] do begin
     if (CBField.ItemIndex = -1) or (CBKind.ItemIndex = -1) or (Edit.Text = '') Then continue;
     if k <> 0 Then st := ' AND ';
-    s += st+FColumns[CBField.ItemIndex].jname+' ';
+    s += st+FColumns[CBField.ItemIndex].table+'.'+FColumns[CBField.ItemIndex].name+' ';
     t:= CBKind.ItemIndex;
     st := FTypes.GetValue(TDBValueType(IntPtr(CBKind.Items.Objects[t])))[t];
     t:= Pos('?', st);

@@ -35,6 +35,7 @@ type
     private
       Filter: TFilter;
       procedure UpdateColumns;
+      function GetJoinedSQL:string;
     public
       constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
   end;
@@ -66,6 +67,28 @@ begin
   end;
 end;
 
+function TFormTable.GetJoinedSQL: string;
+var
+  beginS: string;
+  i: integer;
+begin
+with Books.Book[BookId] do begin
+  beginS := '';
+  result := '';
+  for i:= 0 to High(Columns) do begin
+    if Columns[i].table = '' Then begin
+      beginS += ', '+table+'.'+Columns[i].name;
+      Continue;
+    end else begin
+      beginS += ', '+Columns[i].table+'.name';
+      result+='INNER JOIN '+Columns[i].table+' ON '+table+'.'+Columns[i].name+' = '+Columns[i].table+'.id'+#13#10;
+    end;
+  end;
+  result := Copy(beginS, 3, length(beginS))+' FROM '+table+#13#10+result;
+  ShowMessage(result);
+end;
+end;
+
 constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
 begin
   inherited Create(TheOwner);
@@ -89,7 +112,7 @@ end;
 procedure TFormTable.ButtonFilterCancelClick(Sender: TObject);
 begin
   SQLQuery.Close;
-  SQLQuery.SQL.Text:='SELECT '+Books.Book[BookId].sql;
+  SQLQuery.SQL.Text:='SELECT '+GetJoinedSQL;
   SQLQuery.Open;
   if Sender <> Nil Then TButton(Sender).Visible:=false;
   UpdateColumns;
@@ -101,7 +124,7 @@ var
 begin
   if Filter.GetSQL[0] = '' Then exit;
   SQLQuery.Close;
-  SQLQuery.SQL.Text:='SELECT '+Books.Book[BookId].sql+' WHERE '+Filter.GetSQL[0];
+  SQLQuery.SQL.Text:='SELECT '+GetJoinedSQL+' WHERE '+Filter.GetSQL[0];
   for i:= 1 to high(Filter.GetSQL) do begin
     SQLQuery.Params.ParamByName('P'+intToStr(i-1)).AsString:=Filter.GetSQL[i];
   end;
@@ -129,8 +152,7 @@ begin
     SQLQueryL.SQL.Text := 'DELETE from '+Books.Book[BookId].table+' WHERE id = '+id;
     SQLQueryL.ExecSQL;
     Transaction.Commit;
-    FreeAndNil(SQLQueryL);
-    //ShowMessage(SQLQuery.SQL.Text);
+    SQLQueryL.Free;
     SQLQuery.Open;
     UpdateColumns;
   end;
