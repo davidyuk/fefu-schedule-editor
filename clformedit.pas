@@ -23,6 +23,8 @@ type
     procedure ButtonSaveClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
+  private
+    function GetSQL: string;
   public
     constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
   end;
@@ -36,7 +38,8 @@ implementation
 
 procedure TFormEdit.ButtonSaveClick(Sender: TObject);
 begin
-
+  SQLQuery.Post;
+  SQLQuery.ApplyUpdates;
 end;
 
 procedure TFormEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -54,7 +57,7 @@ var
   Query: TSQLQuery;
   DataS: TDataSource;
 begin
-  for i:= 0 to high(Books.Book[BookId].Columns) do begin
+  for i:= high(Books.Book[BookId].Columns) downto 0 do begin
     Panel := TPanel.Create(Self);
     Panel.Parent := ScrollBox;
     Panel.Align := alTop;
@@ -72,8 +75,9 @@ begin
       DBEdit := TDBEdit.Create(Self);
       DBEdit.Align:= alClient;
       DBEdit.Parent := Panel;
+      DBEdit.DataSource := Datasource;
+      DBEdit.DataField := Books.Book[BookId].Columns[i].name;
       DBEdit.BorderSpacing.Around:=1;
-      DBEdit.BorderSpacing.Right:= 3;
     end else begin
       ComboBox := TDBLookupComboBox.Create(Self);
       DataS := TDataSource.Create(Self);
@@ -87,6 +91,7 @@ begin
       ComboBox.KeyField := 'ID';
       ComboBox.DataSource := Datasource;
       ComboBox.DataField := Books.Book[BookId].Columns[i].name;
+      //ComboBox.ItemIndex:= 2;
       ComboBox.Align:= alClient;
       ComboBox.Parent := Panel;
       ComboBox.ReadOnly := true;
@@ -94,6 +99,20 @@ begin
       ComboBox.BorderSpacing.Right:= 3;
     end;
   end;
+end;
+
+function TFormEdit.GetSQL: string;
+var
+  firstPart: string;
+  i: integer;
+begin
+with Books.Book[BookId] do begin
+  firstPart := '';
+  result := '';
+  for i:= 0 to High(Columns) do
+    firstPart += ', '+table+'.'+Columns[i].name;
+  result := Copy(firstPart, 3, length(firstPart))+' FROM '+table+' WHERE id = '+intToStr(RecordId);
+end;
 end;
 
 constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
@@ -104,8 +123,10 @@ begin
   Datasource.DataSet := SQLQuery;
   Datasource.Enabled := True;
   SQLQuery.Transaction := Transaction;
-  SQLQuery.SQL.Text := 'SELECT * FROM '+Books.Book[BookId].table;
+  //SQLQuery.UpdateSQL.Text := GetSQL;
+  SQLQuery.SQL.Text := 'SELECT '+GetSQL;
   SQLQuery.Open;
+  SQLQuery.Edit;
 end;
 
 procedure TFormEdit.ButtonCancelClick(Sender: TObject);

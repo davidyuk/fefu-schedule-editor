@@ -18,7 +18,7 @@
       <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="155"/>
     </columns>
   </book>
-  <book name="Преподаватель - предмет" table="teacherss_courses">
+  <book name="Преподаватель - предмет" table="teachers_courses">
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
       <column disp="Преподаватель" kind="str" name="teacher_id" table="teachers" width="198"/>
@@ -41,7 +41,7 @@
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
       <column disp="Группа" kind="str" name="name" table="" width="49"/>
-	  <column disp="Количество" kind="int" name="amount" table="" width="20"/>
+      <column disp="Количество" kind="int" name="amount" table="" width="20"/>
     </columns>
   </book>
   <book name="Дисциплины" table="courses">
@@ -60,7 +60,7 @@
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
       <column disp="Номер аудитории" kind="str" name="name" table="" width="116"/>
-	  <column disp="Количество" kind="int" name="amount" table="" width="20"/>
+      <column disp="Количество" kind="int" name="amount" table="" width="20"/>
     </columns>
   </book>
   <book name="Преподаватели" table="teachers">

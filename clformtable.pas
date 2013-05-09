@@ -69,23 +69,21 @@ end;
 
 function TFormTable.GetJoinedSQL: string;
 var
-  beginS: string;
+  firstPart: string;
   i: integer;
 begin
 with Books.Book[BookId] do begin
-  beginS := '';
+  firstPart := '';
   result := '';
   for i:= 0 to High(Columns) do begin
     if Columns[i].table = '' Then begin
-      beginS += ', '+table+'.'+Columns[i].name;
-      Continue;
+      firstPart += ', '+table+'.'+Columns[i].name;
     end else begin
-      beginS += ', '+Columns[i].table+'.name';
+      firstPart += ', '+Columns[i].table+'.name';
       result+='INNER JOIN '+Columns[i].table+' ON '+table+'.'+Columns[i].name+' = '+Columns[i].table+'.id'+#13#10;
     end;
   end;
-  result := Copy(beginS, 3, length(beginS))+' FROM '+table+#13#10+result;
-  ShowMessage(result);
+  result := Copy(firstPart, 3, length(firstPart))+' FROM '+table+#13#10+result;
 end;
 end;
 
@@ -121,12 +119,29 @@ end;
 procedure TFormTable.ButtonFilterFindClick(Sender: TObject);
 var
   i: integer;
+  s: string;
+  state: TFilterState;
 begin
-  if Filter.GetSQL[0] = '' Then exit;
+  state := Filter.GetFilterState;
+  if state.count = 0 Then begin
+    ButtonFilterCancelClick(Nil);
+    ButtonFilterCancel.Visible := false;
+    exit;
+  end;
   SQLQuery.Close;
-  SQLQuery.SQL.Text:='SELECT '+GetJoinedSQL+' WHERE '+Filter.GetSQL[0];
-  for i:= 1 to high(Filter.GetSQL) do begin
-    SQLQuery.Params.ParamByName('P'+intToStr(i-1)).AsString:=Filter.GetSQL[i];
+  s:='SELECT '+GetJoinedSQL+' WHERE ';
+  for i:= 0 to state.count-1 do begin
+    if i > 0 Then s += ' AND ' else s+= '';
+    if Books.Book[BookId].Columns[state.field[i]].table <> '' Then
+      s += Books.Book[BookId].Columns[state.field[i]].table+'.name'
+    else
+      s += Books.Book[BookId].table+'.'+Books.Book[BookId].Columns[state.field[i]].name;
+    s += ' '+Format(filter_operators[state.oper[i]], [':P'+intToStr(i)]);
+  end;
+  SQLQuery.SQL.Text := s;
+  for i:= 0 to state.count-1 do begin
+    s := filter_contentleft[state.oper[i]]+state.content[i]+filter_contentright[state.oper[i]];
+    SQLQuery.Params.ParamByName('P'+intToStr(i)).AsString:= s;
   end;
   SQLQuery.Open;
   ButtonFilterCancel.Visible:=true;

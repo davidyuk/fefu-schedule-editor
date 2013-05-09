@@ -1,21 +1,22 @@
 inherited FormTable: TFormTable
-  Left = 168
-  Height = 200
-  Top = 463
-  Width = 450
+  Left = 254
+  Height = 244
+  Top = 201
+  Width = 580
   Caption = 'Таблица'
-  ClientHeight = 200
-  ClientWidth = 450
+  ClientHeight = 244
+  ClientWidth = 580
   Constraints.MinHeight = 200
   Constraints.MinWidth = 450
   OnShow = FormShow
   Position = poDefault
   object DBGrid: TDBGrid[0]
     Left = 0
-    Height = 168
+    Height = 212
     Top = 0
-    Width = 450
+    Width = 580
     Align = alClient
+    AutoEdit = False
     BorderStyle = bsNone
     Color = clWindow
     Columns = <>
@@ -26,12 +27,12 @@ inherited FormTable: TFormTable
   object PanelEdit: TPanel[1]
     Left = 0
     Height = 32
-    Top = 168
-    Width = 450
+    Top = 212
+    Width = 580
     Align = alBottom
     BevelOuter = bvNone
     ClientHeight = 32
-    ClientWidth = 450
+    ClientWidth = 580
     TabOrder = 1
     object ButtonAdd: TButton
       Left = 1
@@ -67,7 +68,7 @@ inherited FormTable: TFormTable
       TabOrder = 2
     end
     object ButtonFilterFind: TButton
-      Left = 374
+      Left = 504
       Height = 30
       Top = 1
       Width = 75
@@ -78,7 +79,7 @@ inherited FormTable: TFormTable
       TabOrder = 3
     end
     object ButtonFilterCancel: TButton
-      Left = 305
+      Left = 435
       Height = 30
       Top = 1
       Width = 68
@@ -90,7 +91,7 @@ inherited FormTable: TFormTable
       Visible = False
     end
     object ButtonFilterAdd: TButton
-      Left = 274
+      Left = 404
       Height = 30
       Top = 1
       Width = 30
@@ -102,11 +103,13 @@ inherited FormTable: TFormTable
     end
   end
   object Datasource: TDatasource[2]
+    AutoEdit = False
     left = 152
     top = 96
   end
   object SQLQuery: TSQLQuery[3]
     FieldDefs = <>
+    ReadOnly = True
     Params = <>
     left = 72
     top = 96
