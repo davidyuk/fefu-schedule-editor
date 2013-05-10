@@ -6,7 +6,7 @@
       <column disp="День недели" kind="str" name="day_id" table="days" width="84"/>
       <column disp="Время" kind="str" name="time_id" table="times" width="67"/>
       <column disp="Группа" kind="str" name="group_id" table="groups" width="49"/>
-      <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="155"/>
+      <column disp="Название дисциплины" kind="str" name="course_id" table="courses" width="227"/>
       <column disp="Номер аудитории" kind="str" name="place_id" table="places" width="116"/>
       <column disp="Преподаватель" kind="str" name="teacher_id" table="teachers" width="198"/>
     </columns>
@@ -41,13 +41,13 @@
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
       <column disp="Группа" kind="str" name="name" table="" width="49"/>
-      <column disp="Количество" kind="int" name="amount" table="" width="20"/>
+      <column disp="Количество" kind="int" name="amount" table="" width="74"/>
     </columns>
   </book>
   <book name="Дисциплины" table="courses">
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
-      <column disp="Название дисциплины" kind="str" name="name" table="" width="155"/>
+      <column disp="Название дисциплины" kind="str" name="name" table="" width="244"/>
     </columns>
   </book>
   <book name="Расписание занятий" table="places">
@@ -60,7 +60,7 @@
     <columns>
       <column disp="ID" kind="int" name="id" table="" width="17"/>
       <column disp="Номер аудитории" kind="str" name="name" table="" width="116"/>
-      <column disp="Количество" kind="int" name="amount" table="" width="20"/>
+      <column disp="Количество" kind="int" name="amount" table="" width="72"/>
     </columns>
   </book>
   <book name="Преподаватели" table="teachers">

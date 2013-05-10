@@ -1,7 +1,7 @@
 inherited FormEdit: TFormEdit
-  Left = 200
+  Left = 187
   Height = 494
-  Top = 49
+  Top = 142
   Width = 349
   Caption = 'Редактирование поля'
   ClientHeight = 494
@@ -22,18 +22,18 @@ inherited FormEdit: TFormEdit
     ParentColor = False
     TabOrder = 0
     object ButtonSave: TButton
-      Left = 5
+      Left = 85
       Height = 24
       Top = 5
       Width = 75
       Align = alLeft
       BorderSpacing.Around = 5
-      Caption = 'Сохранить'
+      Caption = 'Применить'
       OnClick = ButtonSaveClick
       TabOrder = 0
     end
     object ButtonCancel: TButton
-      Left = 85
+      Left = 165
       Height = 24
       Top = 5
       Width = 75
@@ -42,6 +42,17 @@ inherited FormEdit: TFormEdit
       Caption = 'Отмена'
       OnClick = ButtonCancelClick
       TabOrder = 1
+    end
+    object ButtonSaveClose: TButton
+      Left = 5
+      Height = 24
+      Top = 5
+      Width = 75
+      Align = alLeft
+      BorderSpacing.Around = 5
+      Caption = 'Сохранить'
+      OnClick = ButtonSaveCloseClick
+      TabOrder = 2
     end
   end
   object ScrollBox: TScrollBox[1]
@@ -53,9 +64,22 @@ inherited FormEdit: TFormEdit
     VertScrollBar.Page = 460
     Align = alClient
     BorderStyle = bsNone
+    ClientHeight = 460
+    ClientWidth = 349
     Color = clWhite
     ParentColor = False
     TabOrder = 1
+    object DBGrid1: TDBGrid
+      Left = 0
+      Height = 94
+      Top = 366
+      Width = 349
+      Align = alBottom
+      Color = clWindow
+      Columns = <>
+      DataSource = Datasource
+      TabOrder = 0
+    end
   end
   object SQLQuery: TSQLQuery[2]
     FieldDefs = <>

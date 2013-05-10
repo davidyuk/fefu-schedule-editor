@@ -103,7 +103,7 @@ end;
 procedure TFormTable.ButtonEditClick(Sender: TObject);
 var Form: TFormEdit;
 begin
-  Form := TFormEdit.Create(Application, BookId, DBGrid.SelectedIndex);
+  Form := TFormEdit.Create(Application, BookId, DBGrid.DataSource.DataSet.FieldByName('id').Value);
   FormContainer.AddForm(Form);
 end;
 

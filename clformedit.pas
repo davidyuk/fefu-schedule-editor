@@ -13,18 +13,23 @@ type
   { TFormEdit }
 
   TFormEdit = class(TFormChild)
+    ButtonSaveClose: TButton;
     ButtonSave: TButton;
     ButtonCancel: TButton;
     Datasource: TDatasource;
+    DBGrid1: TDBGrid;
     PanelButtons: TPanel;
     ScrollBox: TScrollBox;
     SQLQuery: TSQLQuery;
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonSaveClick(Sender: TObject);
+    procedure ButtonSaveCloseClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
   private
     function GetSQL: string;
+    function GetUpdateSQL: string;
+    function GetInsertSQL: string;
   public
     constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
   end;
@@ -40,6 +45,14 @@ procedure TFormEdit.ButtonSaveClick(Sender: TObject);
 begin
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
+  Transaction.Commit;
+end;
+
+procedure TFormEdit.ButtonSaveCloseClick(Sender: TObject);
+begin
+  if SQLQuery.State = dsEdit Then
+    ButtonSaveClick(Sender);
+  Close;
 end;
 
 procedure TFormEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -57,6 +70,15 @@ var
   Query: TSQLQuery;
   DataS: TDataSource;
 begin
+  if RecordId = -1 Then begin
+    DataS := TDataSource.Create(Self);
+    Query := TSQLQuery.Create(Self);
+    DataS.DataSet := Query;
+    Query.Transaction := Transaction;
+    Query.SQL.Text:='SELECT GEN_ID('+Books.Book[BookId].table+', 1) FROM RDB$DATABASE';
+    Query.Open;
+    Datasource.DataSet.Fields.FieldByName('id').Value:=DataS.DataSet.Fields.Fields[0].Value;
+  end;
   for i:= high(Books.Book[BookId].Columns) downto 0 do begin
     Panel := TPanel.Create(Self);
     Panel.Parent := ScrollBox;
@@ -75,28 +97,25 @@ begin
       DBEdit := TDBEdit.Create(Self);
       DBEdit.Align:= alClient;
       DBEdit.Parent := Panel;
+      DBEdit.BorderSpacing.Around:=1;
       DBEdit.DataSource := Datasource;
       DBEdit.DataField := Books.Book[BookId].Columns[i].name;
-      DBEdit.BorderSpacing.Around:=1;
     end else begin
-      ComboBox := TDBLookupComboBox.Create(Self);
       DataS := TDataSource.Create(Self);
       Query := TSQLQuery.Create(Self);
       DataS.DataSet := Query;
       Query.Transaction := Transaction;
       Query.SQL.Text:='SELECT ID, NAME FROM '+Books.Book[BookId].Columns[i].table;
       Query.Open;
+      ComboBox := TDBLookupComboBox.Create(Self);
+      ComboBox.Align:= alClient;
+      ComboBox.Parent := Panel;
+      ComboBox.BorderSpacing.Around:=1;
+      ComboBox.DataSource := Datasource;
+      ComboBox.DataField := Books.Book[BookId].Columns[i].name;
       ComboBox.ListSource := DataS;
       ComboBox.ListField := 'NAME';
       ComboBox.KeyField := 'ID';
-      ComboBox.DataSource := Datasource;
-      ComboBox.DataField := Books.Book[BookId].Columns[i].name;
-      //ComboBox.ItemIndex:= 2;
-      ComboBox.Align:= alClient;
-      ComboBox.Parent := Panel;
-      ComboBox.ReadOnly := true;
-      ComboBox.BorderSpacing.Around:=1;
-      ComboBox.BorderSpacing.Right:= 3;
     end;
   end;
 end;
@@ -115,6 +134,31 @@ with Books.Book[BookId] do begin
 end;
 end;
 
+function TFormEdit.GetUpdateSQL: string;
+var i: integer;
+begin
+with Books.Book[BookId] do begin
+  result := '';
+  for i:= 0 to High(Columns) do
+    result += ', '+Columns[i].name+'=:'+Columns[i].name;
+  result := 'UPDATE '+table+' SET '+Copy(result, 3, length(result))+' WHERE id = '+intToStr(RecordId);
+end;
+end;
+
+function TFormEdit.GetInsertSQL: string;
+var i: integer; s1, s2: string;
+begin
+with Books.Book[BookId] do begin
+  result := ''; s1:= ''; s2:= '';
+  for i:= 0 to High(Columns) do begin
+    s1 += ', '+Columns[i].name;
+    s2 += ', :'+Columns[i].name;
+  end;
+  result := 'INSERT INTO '+table+' ('+Copy(s1, 3, length(s1))+') VALUES ('
+    +Copy(s2, 3, length(s2))+')';
+end;
+end;
+
 constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
 begin
   inherited Create(TheOwner);
@@ -123,8 +167,11 @@ begin
   Datasource.DataSet := SQLQuery;
   Datasource.Enabled := True;
   SQLQuery.Transaction := Transaction;
-  //SQLQuery.UpdateSQL.Text := GetSQL;
-  SQLQuery.SQL.Text := 'SELECT '+GetSQL;
+    SQLQuery.SQL.Text := 'SELECT '+GetSQL;
+  if RecordId <> -1 Then
+    SQLQuery.UpdateSQL.Text := GetUpdateSQL
+  else
+    SQLQuery.InsertSQL.Text := GetInsertSQL;
   SQLQuery.Open;
   SQLQuery.Edit;
 end;
