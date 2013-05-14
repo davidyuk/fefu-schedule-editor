@@ -7,7 +7,7 @@ interface
 uses
   Classes, Controls, Forms, DBGrids, sysutils,
   ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter,
-  CLDatabase, CLBooks, CLFormChild, CLFormEdit, CLFormContainer;
+  CLDatabase, CLMetadata, CLFormChild, CLFormEdit, CLFormContainer;
 
 type
 
@@ -34,9 +34,10 @@ type
     procedure ButtonFilterAddClick(Sender: TObject);
     private
       Filter: TFilter;
-      procedure UpdateColumns;
+      procedure RefreshColumns;
       function GetJoinedSQL:string;
     public
+      procedure RefreshSQLContent; override;
       constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
   end;
 
@@ -49,7 +50,7 @@ implementation
 procedure TFormTable.ButtonAddClick(Sender: TObject);
 var Form: TFormEdit;
 begin
-  Form := TFormEdit.Create(Application, BookId, -1);
+  Form := TFormEdit.Create(Application, TableId, -1);
   FormContainer.AddForm(Form);
 end;
 
@@ -58,12 +59,12 @@ begin
   Filter.AddPanel;
 end;
 
-procedure TFormTable.UpdateColumns;
+procedure TFormTable.RefreshColumns;
 var i: integer;
 begin
-  for i:= 0 to High(Books.Book[BookId].Columns) do begin
-    DBGrid.Columns.Items[i].Width:=Books.Book[BookId].Columns[i].width;
-    DBGrid.DataSource.DataSet.Fields[i].DisplayLabel:=Books.Book[BookId].Columns[i].disp;
+  for i:= 0 to High(Metadata[TableId].Columns) do begin
+    DBGrid.Columns.Items[i].Width:=Metadata[TableId].Columns[i].width;
+    DBGrid.DataSource.DataSet.Fields[i].DisplayLabel:=Metadata[TableId].Columns[i].display;
   end;
 end;
 
@@ -72,38 +73,44 @@ var
   firstPart: string;
   i: integer;
 begin
-with Books.Book[BookId] do begin
+with Metadata[TableId] do begin
   firstPart := '';
   result := '';
   for i:= 0 to High(Columns) do begin
-    if Columns[i].table = '' Then begin
-      firstPart += ', '+table+'.'+Columns[i].name;
+    if Columns[i].referenceTable = '' Then begin
+      firstPart += ', '+name+'.'+Columns[i].name;
     end else begin
-      firstPart += ', '+Columns[i].table+'.name';
-      result+='INNER JOIN '+Columns[i].table+' ON '+table+'.'+Columns[i].name+' = '+Columns[i].table+'.id'+#13#10;
+      firstPart += ', '+Columns[i].referenceTable+'.name';
+      result+='INNER JOIN '+Columns[i].referenceTable+' ON '+name+'.'+Columns[i].name+' = '+Columns[i].referenceTable+'.id'+#13#10;
     end;
   end;
-  result := Copy(firstPart, 3, length(firstPart))+' FROM '+table+#13#10+result;
+  result := Copy(firstPart, 3, length(firstPart))+' FROM '+name+#13#10+result;
 end;
+end;
+
+procedure TFormTable.RefreshSQLContent;
+begin
+  SQLQuery.Open;
+  RefreshColumns;
 end;
 
 constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
 begin
   inherited Create(TheOwner);
-  FBookId:= ABookId;
+  FTableId:= ABookId;
   FRecordId:= -1;
   Datasource.DataSet := SQLQuery;
   DBGrid.DataSource := Datasource;
   SQLQuery.Transaction := Transaction;
   Datasource.Enabled := True;
-  Caption:= Books.Book[BookId].name;
-  Filter := TFilter.Create(Books.Book[BookId].Columns, Self);
+  Caption:= Metadata[TableId].display;
+  Filter := TFilter.Create(Self, Metadata[TableId].Columns, Self);
 end;
 
 procedure TFormTable.ButtonEditClick(Sender: TObject);
 var Form: TFormEdit;
 begin
-  Form := TFormEdit.Create(Application, BookId, DBGrid.DataSource.DataSet.FieldByName('id').Value);
+  Form := TFormEdit.Create(Application, TableId, DBGrid.DataSource.DataSet.FieldByName('id').Value);
   FormContainer.AddForm(Form);
 end;
 
@@ -113,7 +120,7 @@ begin
   SQLQuery.SQL.Text:='SELECT '+GetJoinedSQL;
   SQLQuery.Open;
   if Sender <> Nil Then TButton(Sender).Visible:=false;
-  UpdateColumns;
+  RefreshColumns;
 end;
 
 procedure TFormTable.ButtonFilterFindClick(Sender: TObject);
@@ -132,10 +139,10 @@ begin
   s:='SELECT '+GetJoinedSQL+' WHERE ';
   for i:= 0 to state.count-1 do begin
     if i > 0 Then s += ' AND ' else s+= '';
-    if Books.Book[BookId].Columns[state.field[i]].table <> '' Then
-      s += Books.Book[BookId].Columns[state.field[i]].table+'.name'
+    if Metadata[TableId].Columns[state.field[i]].referenceTable <> '' Then
+      s += Metadata[TableId].Columns[state.field[i]].referenceTable+'.name'
     else
-      s += Books.Book[BookId].table+'.'+Books.Book[BookId].Columns[state.field[i]].name;
+      s += Metadata[TableId].name+'.'+Metadata[TableId].Columns[state.field[i]].name;
     s += ' '+Format(filter_operators[state.oper[i]], [':P'+intToStr(i)]);
   end;
   SQLQuery.SQL.Text := s;
@@ -145,7 +152,7 @@ begin
   end;
   SQLQuery.Open;
   ButtonFilterCancel.Visible:=true;
-  UpdateColumns;
+  RefreshColumns;
 end;
 
 
@@ -164,20 +171,24 @@ begin
   s, mtWarning, mbOKCancel, 0) = mrOK Then begin
     SQLQueryL := TSQLQuery.Create(Nil);
     SQLQueryL.Transaction := Transaction;
-    SQLQueryL.SQL.Text := 'DELETE from '+Books.Book[BookId].table+' WHERE id = '+id;
+    SQLQueryL.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+id;
     SQLQueryL.ExecSQL;
     Transaction.Commit;
     SQLQueryL.Free;
     SQLQuery.Open;
-    UpdateColumns;
+    RefreshColumns;
   end;
 end;
 
 procedure TFormTable.DBGridColumnSized(Sender: TObject);
-var i: integer;
+var
+  i: integer;
+  t: TTable;
 begin
-  for i:= 0 to High(Books.Book[BookId].Columns) do
-    Books.Book[BookId].Columns[i].width := DBGrid.Columns.Items[i].Width;
+  t:= Metadata[TableId];
+  for i:= 0 to High(Metadata[TableId].Columns) do
+    t.Columns[i].width := DBGrid.Columns.Items[i].Width;
+  Metadata[TableId] := t;
 end;
 
 procedure TFormTable.FormShow(Sender: TObject);

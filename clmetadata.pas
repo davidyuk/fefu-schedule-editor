@@ -1,4 +1,4 @@
-unit CLBooks;
+unit CLMetadata;
 
 {$mode objfpc}{$H+}
 
@@ -13,41 +13,59 @@ type
   TColumn = record
     kind: TDBValueType;
     {имя в таблице, связанная таблица, отображаемое имя}
-    name, table, disp: string;
+    name, referenceTable, display: string;
     width: integer;
   end;
+  ArrOfColumns = array of TColumn;
 
-  TBook = record
-    name, table: string;
+  TTable = record
+    display, name: string;
     Columns: array of TColumn;
   end;
 
-  ArrOfTBook = array of TBook;
-  ArrOfTColumn = array of TColumn;
+  { TMetadata }
 
-  { TBooks }
-
-  TBooks = class
+  TMetadata = class
   private const
     DBValueInXML: array [0..1] of string = ('int', 'str');
+    FileName = 'database\metadata.xml';
   private
-    FBooks: array of TBook;
+    FTables: array of TTable;
     FTitle: String;
+    function GetTable(AIndex: Integer): TTable;
+    function GetTableCount: Integer;
+    procedure SetTable(AIndex: Integer; AValue: TTable);
   public
-    property Book: ArrOfTBook read FBooks write FBooks;
+    property Table[AIndex: Integer]: TTable read GetTable write SetTable; default;
+    property TableCount: Integer read GetTableCount;
     property Title: string read FTitle;
     constructor Create();
     destructor Destroy(); override;
   end;
 
 var
-  Books: TBooks;
+  Metadata: TMetadata;
 
 implementation
 
-{ TBooks }
+{ TMetadata }
 
-constructor TBooks.Create;
+function TMetadata.GetTable(AIndex: Integer): TTable;
+begin
+  result:= FTables[AIndex];
+end;
+
+function TMetadata.GetTableCount: Integer;
+begin
+  Result := Length(FTables);
+end;
+
+procedure TMetadata.SetTable(AIndex: Integer; AValue: TTable);
+begin
+  FTables[AIndex] := AValue;
+end;
+
+constructor TMetadata.Create;
 var
   inp: TXMLDocument;
   Node1, Node2: TDOMNode;
@@ -61,17 +79,17 @@ begin
   Node := Node2.FirstChild;
   k := 0;
   while Node <> Nil do begin
-    setLength(FBooks[j].Columns, k+1);
+    setLength(FTables[j].Columns, k+1);
     for i:= 0 to Node.Attributes.Length-1 do
       case Node.Attributes[i].NodeName of
-        'name': FBooks[j].Columns[k].name:=UTF8Encode(Node.Attributes[i].TextContent);
+        'name': FTables[j].Columns[k].name:=UTF8Encode(Node.Attributes[i].TextContent);
         'kind':
           for l:= 0 to high(DBValueInXML) do
             if DBValueInXML[l] = UTF8Encode(Node.Attributes[i].TextContent) then
-              FBooks[j].Columns[k].kind := TDBValueType(l);
-        'table': FBooks[j].Columns[k].table:=UTF8Encode(Node.Attributes[i].TextContent);
-        'disp': FBooks[j].Columns[k].disp:=UTF8Encode(Node.Attributes[i].TextContent);
-        'width': FBooks[j].Columns[k].width:=StrToInt(UTF8Encode(Node.Attributes[i].TextContent));
+              FTables[j].Columns[k].kind := TDBValueType(l);
+        'reference_table': FTables[j].Columns[k].referenceTable:=UTF8Encode(Node.Attributes[i].TextContent);
+        'display': FTables[j].Columns[k].display:=UTF8Encode(Node.Attributes[i].TextContent);
+        'width': FTables[j].Columns[k].width:=StrToInt(UTF8Encode(Node.Attributes[i].TextContent));
       end;
     Node := Node.NextSibling;
     inc(k);
@@ -80,14 +98,14 @@ end;
 
 begin
   try
-    ReadXMLFile(inp, 'query.xml');
+    ReadXMLFile(inp, FileName);
     FTitle := UTF8Encode(inp.DocumentElement.Attributes.Item[0].TextContent);
     Node1 := inp.DocumentElement.FirstChild;
     j:= 0;
     while Node1 <> nil do begin
-      setLength(FBooks, j+1);
-      FBooks[j].name := UTF8Encode(Node1.Attributes[0].TextContent);
-      FBooks[j].table := UTF8Encode(Node1.Attributes[1].TextContent);
+      setLength(FTables, j+1);
+      FTables[j].display := UTF8Encode(Node1.Attributes.GetNamedItem('display').TextContent);
+      FTables[j].name := UTF8Encode(Node1.Attributes.GetNamedItem('name').TextContent);
       Node2 := Node1.FirstChild;
       while Node2 <> Nil do begin
         case Node2.NodeName of
@@ -107,7 +125,7 @@ begin
   FreeAndNil(inp);
 end;
 
-destructor TBooks.Destroy;
+destructor TMetadata.Destroy;
 var
   outp: TXMLDocument;
   Node1, Node2, Node3, Node4: TDOMElement;
@@ -116,19 +134,19 @@ begin
   outp:= TXMLDocument.Create;
   Node1 := outp.CreateElement('document');
   Node1.SetAttribute('name',UTF8Decode(FTitle));
-  for i:= 0 to high(FBooks) do begin
+  for i:= 0 to high(FTables) do begin
     Node2:= outp.CreateElement('book');
-    Node2.SetAttribute('name', UTF8Decode(FBooks[i].name));
-    Node2.SetAttribute('table', UTF8Decode(FBooks[i].table));
+    Node2.SetAttribute('display', UTF8Decode(FTables[i].display));
+    Node2.SetAttribute('name', UTF8Decode(FTables[i].name));
 
     Node3:= outp.CreateElement('columns');
-    for j:= 0 to high(FBooks[i].Columns) do begin
+    for j:= 0 to high(FTables[i].Columns) do begin
       Node4 := outp.CreateElement('column');
-      Node4.SetAttribute('name', UTF8Decode(FBooks[i].Columns[j].name));
-      Node4.SetAttribute('kind', UTF8Decode(DBValueInXML[Integer(FBooks[i].Columns[j].kind)]));
-      Node4.SetAttribute('table', UTF8Decode(FBooks[i].Columns[j].table));
-      Node4.SetAttribute('disp', UTF8Decode(FBooks[i].Columns[j].disp));
-      Node4.SetAttribute('width', UTF8Decode(intToStr(FBooks[i].Columns[j].width)));
+      Node4.SetAttribute('name', UTF8Decode(FTables[i].Columns[j].name));
+      Node4.SetAttribute('kind', UTF8Decode(DBValueInXML[Integer(FTables[i].Columns[j].kind)]));
+      Node4.SetAttribute('reference_table', UTF8Decode(FTables[i].Columns[j].referenceTable));
+      Node4.SetAttribute('display', UTF8Decode(FTables[i].Columns[j].display));
+      Node4.SetAttribute('width', UTF8Decode(intToStr(FTables[i].Columns[j].width)));
       Node3.AppendChild(Node4);
     end;
     Node2.AppendChild(Node3);
@@ -136,17 +154,17 @@ begin
     Node1.AppendChild(Node2);
   end;
   outp.AppendChild(Node1);
-  WriteXMLFile(outp, 'query.xml');
+  WriteXMLFile(outp, FileName);
   FreeAndNil(outp);
 end;
 
 initialization
 
-  Books := TBooks.Create();
+  Metadata := TMetadata.Create();
 
 finalization
 
-  Books.Free;
+  Metadata.Free;
 
 end.
 

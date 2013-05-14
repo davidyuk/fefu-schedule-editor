@@ -14,23 +14,16 @@ type
 
   TFormChild = class(TForm)
   protected
-    FBookId, FRecordId: integer;
+    FTableId, FRecordId: integer;
   public
-    property BookId: integer read FBookId;
+    property TableId: integer read FTableId;
     property RecordId: integer read FRecordId;
-    constructor Create(TheOwner: TComponent); virtual;
+    procedure RefreshSQLContent; virtual; abstract;
   end;
 
 implementation
 
-{$R *.lfm}
-
 { TFormChild }
-
-constructor TFormChild.Create(TheOwner: TComponent);
-begin
-  inherited Create(TheOwner);
-end;
 
 end.
 

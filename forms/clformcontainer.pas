@@ -15,8 +15,10 @@ type
   TFormContainer = class
     private
       Forms: array of TFormChild;
+      procedure FormChildClose(Sender: TObject; var CloseAction: TCloseAction);
     public
       procedure AddForm(FormChild: TFormChild);
+      procedure RefreshSQLContent;
       procedure Clear;
   end;
 
@@ -27,11 +29,31 @@ implementation
 
 { TFormContainer }
 
+procedure TFormContainer.FormChildClose(Sender: TObject; var CloseAction: TCloseAction);
+var i: integer; f: Boolean;
+begin
+  f:= false;
+  for i:= 0 to High(Forms)-1 do begin
+    if Forms[i] = Sender Then f:= true;
+    if f Then Forms[i] := Forms[i+1];
+  end;
+  SetLength(Forms, Length(Forms)-1);
+  CloseAction:= caFree;
+end;
+
 procedure TFormContainer.AddForm(FormChild: TFormChild);
 begin
   setLength(Forms, length(Forms)+1);
   Forms[high(Forms)] := FormChild;
+  FormChild.AddHandlerClose(@FormChildClose, False);
   FormChild.Show();
+end;
+
+procedure TFormContainer.RefreshSQLContent;
+var i: integer;
+begin
+  for i:= 0 to High(Forms) do
+    Forms[i].RefreshSQLContent;
 end;
 
 procedure TFormContainer.Clear;

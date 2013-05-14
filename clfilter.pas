@@ -5,14 +5,18 @@ unit CLFilter;
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, StdCtrls, Controls, Buttons, CLBooks;
+  Classes, SysUtils, ExtCtrls, StdCtrls, Controls, Buttons, CLMetadata;
 
 const
   filter_maxcount = 20;
-  filter_operators: array[0..6] of string =    ('< %s', '<= %s', '= %s', '>= %s', '> %s', 'LIKE %s', 'LIKE %s');
-  filter_contentleft: array[0..6] of string =  ('',     '',      '',     '',      '',     '',        '%');
-  filter_contentright: array[0..6] of string = ('',     '',      '',     '',      '',     '%',       '%');
-  filter_captions: array[0..6] of string = ('Меньше', 'Меньше или равно', 'Равно', 'Больше или равно', 'Больше', 'Начинается с', 'Содержит');
+  filter_operators: array[0..6] of string =
+    ('< %s', '<= %s', '= %s', '>= %s', '> %s', 'LIKE %s', 'LIKE %s');
+  filter_contentleft: array[0..6] of string =
+    ('',     '',      '',     '',      '',     '',        '%');
+  filter_contentright: array[0..6] of string =
+    ('',     '',      '',     '',      '',     '%',       '%');
+  filter_captions: array[0..6] of string =
+    ('Меньше', 'Меньше или равно', 'Равно', 'Больше или равно', 'Больше', 'Начинается с', 'Содержит');
 
 type
 
@@ -48,7 +52,7 @@ type
     procedure RemovePanel(panel: TFilterPanel);
     function GetFilterState: TFilterState;
     procedure SetFilterState(AFilterState: TFilterState);
-    constructor Create(AColumns: ArrOfTColumn; AParent: TWinControl);
+    constructor Create(TheOwner: TComponent; AColumns: ArrOfColumns; AParent: TWinControl);
     destructor Destroy; override;
   end;
 
@@ -85,7 +89,7 @@ begin
   ComboBoxF.BorderSpacing.Around := 3;
   ComboBoxF.Width := 120;
   for i:= 0 to high(Columns) do
-    ComboBoxF.Items.Add(Columns[i].disp);
+    ComboBoxF.Items.Add(Columns[i].display);
 
   Edit := TEdit.Create(TheOwner);
   Edit.Parent := Self;
@@ -170,8 +174,10 @@ begin
   end;
 end;
 
-constructor TFilter.Create(AColumns: ArrOfTColumn; AParent: TWinControl);
+constructor TFilter.Create(TheOwner: TComponent; AColumns: ArrOfColumns;
+  AParent: TWinControl);
 begin
+  inherited Create(TheOwner);
   setLength(Panels, 0);
   FColumns := AColumns;
   FParent := AParent;

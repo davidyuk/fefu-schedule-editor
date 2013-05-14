@@ -41,14 +41,14 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="9">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="DBClient"/>
       </Unit0>
       <Unit1>
-        <Filename Value="clformmain.pas"/>
+        <Filename Value="forms\clformmain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormMain"/>
         <HasResources Value="True"/>
@@ -56,7 +56,7 @@
         <UnitName Value="CLFormMain"/>
       </Unit1>
       <Unit2>
-        <Filename Value="clformtable.pas"/>
+        <Filename Value="forms\clformtable.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormTable"/>
         <HasResources Value="True"/>
@@ -64,46 +64,41 @@
         <UnitName Value="CLFormTable"/>
       </Unit2>
       <Unit3>
-        <Filename Value="claddparts.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLAddParts"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="clformcontainer.pas"/>
+        <Filename Value="forms\clformcontainer.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLFormContainer"/>
-      </Unit4>
-      <Unit5>
-        <Filename Value="clformchild.pas"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="forms\clformchild.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormChild"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CLFormChild"/>
-      </Unit5>
-      <Unit6>
+      </Unit4>
+      <Unit5>
         <Filename Value="cldatabase.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLDatabase"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="clmetadata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLMetadata"/>
       </Unit6>
       <Unit7>
-        <Filename Value="clbooks.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLBooks"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="clformedit.pas"/>
+        <Filename Value="forms\clformedit.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormEdit"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CLFormEdit"/>
-      </Unit8>
-      <Unit9>
+      </Unit7>
+      <Unit8>
         <Filename Value="clfilter.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLFilter"/>
-      </Unit9>
+      </Unit8>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -114,9 +109,13 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="forms"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
+      <Debugging>
+        <UseHeaptrc Value="True"/>
+      </Debugging>
       <Options>
         <Win32>
           <GraphicApplication Value="True"/>

@@ -1,19 +1,20 @@
 inherited FormEdit: TFormEdit
-  Left = 187
-  Height = 494
-  Top = 142
+  Left = 214
+  Height = 246
+  Top = 188
   Width = 349
   Caption = 'Редактирование поля'
-  ClientHeight = 494
+  ClientHeight = 246
   ClientWidth = 349
   Constraints.MinHeight = 100
   Constraints.MinWidth = 100
-  OnClose = FormClose
+  OnCloseQuery = FormCloseQuery
   OnShow = FormShow
+  Position = poDefault
   object PanelButtons: TPanel[0]
     Left = 0
     Height = 34
-    Top = 460
+    Top = 212
     Width = 349
     Align = alBottom
     BevelOuter = bvNone
@@ -21,19 +22,8 @@ inherited FormEdit: TFormEdit
     ClientWidth = 349
     ParentColor = False
     TabOrder = 0
-    object ButtonSave: TButton
-      Left = 85
-      Height = 24
-      Top = 5
-      Width = 75
-      Align = alLeft
-      BorderSpacing.Around = 5
-      Caption = 'Применить'
-      OnClick = ButtonSaveClick
-      TabOrder = 0
-    end
     object ButtonCancel: TButton
-      Left = 165
+      Left = 85
       Height = 24
       Top = 5
       Width = 75
@@ -41,7 +31,7 @@ inherited FormEdit: TFormEdit
       BorderSpacing.Around = 5
       Caption = 'Отмена'
       OnClick = ButtonCancelClick
-      TabOrder = 1
+      TabOrder = 0
     end
     object ButtonSaveClose: TButton
       Left = 5
@@ -52,42 +42,43 @@ inherited FormEdit: TFormEdit
       BorderSpacing.Around = 5
       Caption = 'Сохранить'
       OnClick = ButtonSaveCloseClick
-      TabOrder = 2
+      TabOrder = 1
     end
   end
   object ScrollBox: TScrollBox[1]
     Left = 0
-    Height = 460
+    Height = 186
     Top = 0
     Width = 349
     HorzScrollBar.Page = 349
-    VertScrollBar.Page = 460
+    VertScrollBar.Page = 186
     Align = alClient
     BorderStyle = bsNone
-    ClientHeight = 460
-    ClientWidth = 349
     Color = clWhite
     ParentColor = False
     TabOrder = 1
-    object DBGrid1: TDBGrid
-      Left = 0
-      Height = 94
-      Top = 366
-      Width = 349
-      Align = alBottom
-      Color = clWindow
-      Columns = <>
-      DataSource = Datasource
-      TabOrder = 0
-    end
   end
-  object SQLQuery: TSQLQuery[2]
+  object LabelError: TLabel[2]
+    Left = 5
+    Height = 16
+    Top = 191
+    Width = 339
+    Align = alBottom
+    BorderSpacing.Around = 5
+    Caption = 'Ошибка: не все поля заполнены.'
+    Font.Color = clRed
+    ParentColor = False
+    ParentFont = False
+    Visible = False
+  end
+  object SQLQuery: TSQLQuery[3]
     FieldDefs = <>
     Params = <>
     left = 280
     top = 32
   end
-  object Datasource: TDatasource[3]
+  object Datasource: TDatasource[4]
+    DataSet = SQLQuery
     left = 280
     top = 96
   end

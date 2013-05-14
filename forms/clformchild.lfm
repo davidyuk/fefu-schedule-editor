@@ -1,7 +1,7 @@
 object FormChild: TFormChild
-  Left = 249
+  Left = 0
   Height = 240
-  Top = 137
+  Top = 0
   Width = 320
-  LCLVersion = '1.0.6.0'
+  LCLVersion = '1.0.8.0'
 end

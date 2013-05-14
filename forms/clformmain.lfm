@@ -1,27 +1,27 @@
 object FormMain: TFormMain
   Left = 177
-  Height = 300
+  Height = 519
   Top = 158
-  Width = 200
+  Width = 180
   Caption = 'Клиент для работы с БД'
-  ClientHeight = 280
-  ClientWidth = 200
+  ClientHeight = 499
+  ClientWidth = 180
   Constraints.MaxWidth = 220
   Constraints.MinHeight = 300
   Constraints.MinWidth = 180
   Menu = MainMenu
   OnShow = FormShow
-  Position = poDefault
-  LCLVersion = '1.0.6.0'
+  Position = poDefaultPosOnly
+  LCLVersion = '1.0.8.0'
   object PanelTools: TPanel
     Left = 0
     Height = 42
     Top = 0
-    Width = 200
+    Width = 180
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 42
-    ClientWidth = 200
+    ClientWidth = 180
     TabOrder = 0
     object ToggleBoxConnect: TToggleBox
       Left = 8
@@ -33,29 +33,17 @@ object FormMain: TFormMain
       TabOrder = 0
     end
   end
-  object StatusBar: TStatusBar
-    Left = 0
-    Height = 23
-    Top = 257
-    Width = 200
-    Panels = <    
-      item
-        Text = 'БД не подключена'
-        Width = 50
-      end>
-    SimplePanel = False
-  end
   object TreeView: TTreeView
     Left = 0
-    Height = 215
+    Height = 457
     Top = 42
-    Width = 200
+    Width = 180
     Align = alClient
     AutoExpand = True
     DefaultItemHeight = 18
     ReadOnly = True
     ScrollBars = ssAutoBoth
-    TabOrder = 2
+    TabOrder = 1
     OnClick = TreeViewClick
     Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
