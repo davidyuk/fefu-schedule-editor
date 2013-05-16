@@ -35,7 +35,7 @@ object FormMain: TFormMain
   end
   object TreeView: TTreeView
     Left = 0
-    Height = 457
+    Height = 426
     Top = 42
     Width = 180
     Align = alClient
@@ -46,6 +46,18 @@ object FormMain: TFormMain
     TabOrder = 1
     OnClick = TreeViewClick
     Options = [tvoAutoExpand, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+  end
+  object ButtonShowFormSchedule: TButton
+    Left = 3
+    Height = 25
+    Top = 471
+    Width = 174
+    Align = alBottom
+    BorderSpacing.Around = 3
+    Caption = 'Расписание занятий'
+    Enabled = False
+    OnClick = ButtonShowFormScheduleClick
+    TabOrder = 2
   end
   object MainMenu: TMainMenu
     left = 64

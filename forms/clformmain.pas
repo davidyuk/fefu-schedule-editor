@@ -6,13 +6,15 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, ExtCtrls, ComCtrls, StdCtrls,
-  Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, Graphics;
+  Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, CLFormSchedule,
+  Graphics;
 
 type
 
   { TFormMain }
 
   TFormMain = class(TForm)
+    ButtonShowFormSchedule: TButton;
     MainMenu: TMainMenu;
     MenuItemFile: TMenuItem;
     MenuItemHelp: TMenuItem;
@@ -21,6 +23,7 @@ type
     PanelTools: TPanel;
     ToggleBoxConnect: TToggleBox;
     TreeView: TTreeView;
+    procedure ButtonShowFormScheduleClick(Sender: TObject);
     procedure FormTableClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormTableActive(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -86,10 +89,12 @@ begin
       t.Data := Pointer(i); //запоминаем номер справочника
     end;
     ToggleBoxConnect.Caption := 'Отключиться от БД';
+    ButtonShowFormSchedule.Enabled := True;
   end else begin
     TreeView.Enabled := False;
     TreeView.Items.Clear;
     ToggleBoxConnect.Caption := 'Подключиться к БД';
+    ButtonShowFormSchedule.Enabled := False;
     FormContainer.Clear;
     Connection.Connected := false;
   end;
@@ -138,6 +143,13 @@ procedure TFormMain.FormTableClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
   SetFormStateInTreeView(TFormTable(Sender).TableId, false);
+end;
+
+procedure TFormMain.ButtonShowFormScheduleClick(Sender: TObject);
+var FormSchedule: TFormSchedule;
+begin
+  FormSchedule := TFormSchedule.Create(Application);
+  FormContainer.AddForm(FormSchedule);
 end;
 
 procedure TFormMain.FormTableActive(Sender: TObject);

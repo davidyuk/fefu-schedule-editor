@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <document name="Редактор расписания">
-  <book name="schedule_items" display="Расписание занятий">
+  <table name="schedule_items" display="Расписание занятий">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="day_id" width="84" display="День недели" reference_table="days"/>
@@ -10,63 +10,63 @@
       <column kind="str" name="place_id" width="116" display="Номер аудитории" reference_table="places"/>
       <column kind="str" name="teacher_id" width="198" display="Преподаватель" reference_table="teachers"/>
     </columns>
-  </book>
-  <book name="groups_courses" display="Группа - предмет">
+  </table>
+  <table name="groups_courses" display="Группа - предмет">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="group_id" width="49" display="Группа" reference_table="groups"/>
       <column kind="str" name="course_id" width="155" display="Название дисциплины" reference_table="courses"/>
     </columns>
-  </book>
-  <book name="teachers_courses" display="Преподаватель - предмет">
+  </table>
+  <table name="teachers_courses" display="Преподаватель - предмет">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="teacher_id" width="198" display="Преподаватель" reference_table="teachers"/>
       <column kind="str" name="course_id" width="155" display="Название дисциплины" reference_table="courses"/>
     </columns>
-  </book>
-  <book name="days" display="День недели">
+  </table>
+  <table name="days" display="День недели">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="84" display="День недели" reference_table=""/>
     </columns>
-  </book>
-  <book name="times" display="Время">
+  </table>
+  <table name="times" display="Время">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="67" display="Время" reference_table=""/>
     </columns>
-  </book>
-  <book name="groups" display="Группы">
+  </table>
+  <table name="groups" display="Группы">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="49" display="Группа" reference_table=""/>
       <column kind="int" name="amount" width="74" display="Количество" reference_table=""/>
     </columns>
-  </book>
-  <book name="courses" display="Дисциплины">
+  </table>
+  <table name="courses" display="Дисциплины">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="244" display="Название дисциплины" reference_table=""/>
     </columns>
-  </book>
-  <book name="places" display="Расписание занятий">
+  </table>
+  <table name="places" display="Расписание занятий">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="116" display="Номер аудитории" reference_table=""/>
     </columns>
-  </book>
-  <book name="places" display="Аудитории">
+  </table>
+  <table name="places" display="Аудитории">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="116" display="Номер аудитории" reference_table=""/>
       <column kind="int" name="amount" width="72" display="Количество" reference_table=""/>
     </columns>
-  </book>
-  <book name="teachers" display="Преподаватели">
+  </table>
+  <table name="teachers" display="Преподаватели">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
       <column kind="str" name="name" width="198" display="Преподаватель" reference_table=""/>
     </columns>
-  </book>
+  </table>
 </document>

@@ -32,10 +32,13 @@ type
   private
     FTables: array of TTable;
     FTitle: String;
+    FStringList: TStringList;
     function GetTable(AIndex: Integer): TTable;
     function GetTableCount: Integer;
     procedure SetTable(AIndex: Integer; AValue: TTable);
   public
+    function GetTableId(ATableName: string): integer;
+    function GetTable(ATableName: string): TTable;
     property Table[AIndex: Integer]: TTable read GetTable write SetTable; default;
     property TableCount: Integer read GetTableCount;
     property Title: string read FTitle;
@@ -63,6 +66,17 @@ end;
 procedure TMetadata.SetTable(AIndex: Integer; AValue: TTable);
 begin
   FTables[AIndex] := AValue;
+end;
+
+function TMetadata.GetTableId(ATableName: string): integer;
+begin
+  Result := -1;
+  Result := FStringList.IndexOf(ATableName);
+end;
+
+function TMetadata.GetTable(ATableName: string): TTable;
+begin
+  Result := FTables[FStringList.IndexOf(ATableName)];
 end;
 
 constructor TMetadata.Create;
@@ -102,10 +116,12 @@ begin
     FTitle := UTF8Encode(inp.DocumentElement.Attributes.Item[0].TextContent);
     Node1 := inp.DocumentElement.FirstChild;
     j:= 0;
+    FStringList := TStringList.Create;
     while Node1 <> nil do begin
       setLength(FTables, j+1);
       FTables[j].display := UTF8Encode(Node1.Attributes.GetNamedItem('display').TextContent);
       FTables[j].name := UTF8Encode(Node1.Attributes.GetNamedItem('name').TextContent);
+      FStringList.Insert(j, FTables[j].name);
       Node2 := Node1.FirstChild;
       while Node2 <> Nil do begin
         case Node2.NodeName of
@@ -135,7 +151,7 @@ begin
   Node1 := outp.CreateElement('document');
   Node1.SetAttribute('name',UTF8Decode(FTitle));
   for i:= 0 to high(FTables) do begin
-    Node2:= outp.CreateElement('book');
+    Node2:= outp.CreateElement('table');
     Node2.SetAttribute('display', UTF8Decode(FTables[i].display));
     Node2.SetAttribute('name', UTF8Decode(FTables[i].name));
 
@@ -156,6 +172,7 @@ begin
   outp.AppendChild(Node1);
   WriteXMLFile(outp, FileName);
   FreeAndNil(outp);
+  FreeAndNil(FStringList);
 end;
 
 initialization

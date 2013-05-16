@@ -162,6 +162,7 @@ var
   s, id: string;
   SQLQueryL: TSQLQuery;
 begin
+{ TODO : Надо спросить у пользователя, если он удаляет запись из справочника: присвоить этому полю значение Null, удалить все записи ссылающиеся на эту или установить всем записям, ссылающимся на эту значение Null }
   id := Datasource.DataSet.Fields.Fields[0].DisplayText;
   if id = '' Then exit;
   s:= '';
