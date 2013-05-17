@@ -41,7 +41,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="11">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -107,6 +107,11 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CLFormSchedule"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="forms\clformschedulecell.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLFormScheduleCell"/>
+      </Unit10>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
