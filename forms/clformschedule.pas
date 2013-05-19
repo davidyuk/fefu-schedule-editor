@@ -5,15 +5,16 @@ unit CLFormSchedule;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls,
+  Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls, Forms,
   Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb, db,
-  CLFormScheduleCell, Math;
+  CLScheduleCell, Math, CLExportToHTML, CLFormContainer, CLFormEdit;
 
 type
 
   { TFormSchedule }
 
   TFormSchedule = class(TFormChild)
+    ButtonExportHTML: TButton;
     ButtonAline: TButton;
     ComboBoxH: TComboBox;
     ComboBoxV: TComboBox;
@@ -31,6 +32,7 @@ type
     PanelRight: TPanel;
     SQLQuery: TSQLQuery;
     procedure ButtonAlineClick(Sender: TObject);
+    procedure ButtonExportHTMLClick(Sender: TObject);
     procedure ComboBoxChange(Sender: TObject);
     procedure DrawGridClick(Sender: TObject);
     procedure DrawGridDblClick(Sender: TObject);
@@ -39,12 +41,14 @@ type
     procedure DrawGridMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure FormShow(Sender: TObject);
+    procedure PaintBoxClick(Sender: TObject);
     procedure PaintBoxMouseLeave(Sender: TObject);
+    procedure PaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
     procedure PaintBoxPaint(Sender: TObject);
   private
     Cells: array of array of TDrawGridCell;
     MouseOnGrid: TPoint;
-    LastMouseCursor: TCursor;
     FullTableCell: TDrawGridCell;
     procedure ReBuildDrawGridContent;
     function GetSelectSQL:string;
@@ -52,6 +56,7 @@ type
     function FieldListStr(AFormat: String): String;
     function GetJoinedSQL: string;
     procedure ShowFullTableCell(content: TDrawGridCell);
+    procedure EditCellItem(Sender: TDrawGridCell; Param: integer);
     procedure AlineRow(ARow: integer);
     procedure AlineCol(ACol: integer);
   public
@@ -68,6 +73,7 @@ implementation
 procedure TFormSchedule.FormShow(Sender: TObject);
 var i: integer;
 begin
+  { TODO : Должно выпадать в другом месте }
   FTableId := Metadata.GetTableId('schedule_items');
   FRecordId := -1;
   If FTableId = -1 Then begin
@@ -83,13 +89,27 @@ begin
   ComboBoxH.ItemIndex := 1;
   ComboBoxV.ItemIndex := 2;
   ComboBoxSort.ItemIndex := 3;
+  FullTableCell := TDrawGridCell.Create(Self, @ShowFullTableCell, @EditCellItem);
   ReBuildDrawGridContent;
+end;
+
+procedure TFormSchedule.PaintBoxClick(Sender: TObject);
+begin
+  FullTableCell.MouseClick(MouseOnGrid.x, MouseOnGrid.y);
 end;
 
 procedure TFormSchedule.PaintBoxMouseLeave(Sender: TObject);
 begin
   with Sender as TPaintBox do
     Parent.Visible := false;
+end;
+
+procedure TFormSchedule.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  MouseOnGrid := Point(x, y);
+  FullTableCell.MouseMove(x, y);
+  Invalidate;
 end;
 
 procedure TFormSchedule.PaintBoxPaint(Sender: TObject);
@@ -129,11 +149,25 @@ begin
     AlineRow(i);
 end;
 
+procedure TFormSchedule.ButtonExportHTMLClick(Sender: TObject);
+var a: ArrOfArrOfString; i, j: integer; FConflicts: array of string;
+begin
+  SetLength(a, Length(Cells));
+  for i:= 0 to High(Cells) do begin
+    SetLength(a[i], Length(Cells[i]));
+    for j:= 0 to High(Cells[i]) do
+      a[i][j]:= Cells[i][j].Text;
+  end;
+  ExportToHTML('Расписание занятий', a, ['Conflict1', 'Conflict2']);
+end;
+
 procedure TFormSchedule.ReBuildDrawGridContent;
 var i, j, x, y: integer; arrstr: array of string;
 
   procedure FillFixedPart(horizontal: boolean);
-  var FSQLQuery: TSQLQuery; FDatasource: TDataSource; i, j: integer;
+  var
+    FSQLQuery: TSQLQuery; FDatasource: TDataSource; i, j: integer;
+    pi: PInteger;
   begin
     FSQLQuery := TSQLQuery.Create(nil);
     FDatasource := TDataSource.Create(nil);
@@ -144,13 +178,12 @@ var i, j, x, y: integer; arrstr: array of string;
     FSQLQuery.SQL.Text := 'SELECT name FROM '+Metadata[TableId].Columns[i].referenceTable
       +' ORDER BY id';
     FSQLQuery.Open;
-    if horizontal Then begin i:= 1; j:= 0; end
-    else begin i:= 0; j:= 1; end;
+    i := 0; j:= 0;
+    if horizontal then pi := @i else pi := @j;
+    pi^ += 1;
     while not FDatasource.DataSet.EOF do begin
       Cells[i][j].AddItem(-1, [FDatasource.DataSet.Fields.Fields[0].AsString]);
-      Cells[i][j].Fixed := True;
-      if horizontal Then inc(i)
-      else inc(j);
+      pi^ += 1;
       FDatasource.DataSet.Next;
     end;
     FreeAndNil(FDatasource);
@@ -164,13 +197,12 @@ begin
   x:= GetItemCount(Metadata.GetTableId(Metadata[TableId].Columns[ComboBoxH.ItemIndex].referenceTable));
   y:= GetItemCount(Metadata.GetTableId(Metadata[TableId].Columns[ComboBoxV.ItemIndex].referenceTable));
   SetLength(Cells, x+1, y+1);
-  for i:= 0 to x do
-    for j:= 0 to y do
-      Cells[i][j] := TDrawGridCell.Create(self, @ShowFullTableCell);
+  for i:= 0 to High(Cells) do
+    for j:= 0 to High(Cells[i]) do
+      Cells[i][j] := TDrawGridCell.Create(self, @ShowFullTableCell, @EditCellItem);
   DrawGrid.ColCount := x+1;
   DrawGrid.RowCount := y+1;
 
-  Cells[0][0].Fixed := true;
   FillFixedPart(false);
   FillFixedPart(true);
 
@@ -190,10 +222,13 @@ begin
         arrstr[High(arrstr)] := Fields.Fields[i].AsString;
       end;
       Cells[x][y].AddItem(Fields.Fields[0].AsInteger, arrstr);
-      Cells[x][y].CreateButtons;
       Next;
     end;
   end;
+
+  for i:= 0 to High(Cells) do
+    for j:= 0 to High(Cells[i]) do
+      Cells[i][j].Fixed := (i = 0) or (j = 0);
 end;
 
 function TFormSchedule.GetJoinedSQL: string;
@@ -226,8 +261,36 @@ begin
   PanelHint.Height := content.TextHeight+2;
   PanelHint.Left := content.Rect.Left+DrawGrid.Left;
   PanelHint.Top := content.Rect.Top+DrawGrid.Top;
-  FullTableCell := content;
+  FullTableCell.Items := content.Items;
+  FullTableCell.Fixed := false;
   PanelHint.Visible := true;
+end;
+
+procedure TFormSchedule.EditCellItem(Sender: TDrawGridCell; Param: integer);
+var Form: TFormEdit; i, j: integer; f: boolean;
+begin
+  f:= false;
+  for i:= 0 to High(Cells) do begin
+    for j:= 0 to high(Cells[i]) do
+      if Cells[i][j] = Sender Then begin
+        f:= true;
+        Break;
+      end;
+    if f Then Break;
+  end;
+  if Param = 0 Then begin
+    Form := TFormEdit.Create(Application, TableId, -1);
+    Form.SetDefaultValue(ComboBoxH.ItemIndex,IntToStr(i-1));
+    Form.SetDefaultValue(ComboBoxV.ItemIndex,IntToStr(j-1));
+    FormContainer.AddForm(Form);
+  end;
+  if Param > 0 Then begin
+    Form := TFormEdit.Create(Application, TableId, Sender.Items[Param-1].id);
+    FormContainer.AddForm(Form);
+  end;
+  if Param < 0 Then begin
+    { TODO: Сделай хоть что-нибудь }
+  end;
 end;
 
 procedure TFormSchedule.AlineRow(ARow: integer);
@@ -261,7 +324,6 @@ var CellX, CellY, i, j: integer;
 begin
   MouseOnGrid := Point(x, y);
   with Sender as TDrawGrid do begin
-    if Cursor = 0 Then LastMouseCursor := 0;
     MouseToCell(x, y, CellX, CellY);
     for i:= 0 to High(Cells) do
       for j:= 0 to High(Cells[i]) do

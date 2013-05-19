@@ -56,11 +56,13 @@ type
     FItems: array of TCellItem;
     FButtons: array of TDrawGridCellButton;
     FFixed: Boolean;
+    FText: string;
     FShowFullCell: procedure(content: TDrawGridCell) of object;
     function GetItem(AIndex: integer): TCellItem;
   public
     property Item[AIndex: integer]: TCellItem read GetItem;
-    property Fixed:boolean read FFixed write FFixed;
+    property Fixed: boolean read FFixed write FFixed;
+    property Text: string read FText;
     property TextWidth: integer read FTextWidth;
     property TextHeight: integer read FTextHeight;
     property Rect: TRect read FRect;
@@ -108,6 +110,7 @@ end;
 procedure TDrawGridCellButton.MouseClick(x, y: integer);
 begin
   if not Visible Then exit;
+  // Math.InRange
   if (x>FX) and (x<FX+size) and (y>FY) and (y<FY+size) Then Click;
 end;
 
@@ -146,9 +149,13 @@ begin
   ACanvas.FillRect(ARect);
   width := 0;
   top:= ARect.Top;
+  FText := '';
   For i:= 0 to High(FItems) do with FItems[i] do begin
+    if i <> 0 Then FText += #13#10'newitem'#13#10;
     for j:= 0 to High(content) do begin
+      if j <> 0 Then FText += #13#10;
       ACanvas.TextRect(ARect, ARect.Left, top, content[j]);
+      FText += content[j];
       top += ACanvas.TextHeight(content[j]);
       width := Max(width, ACanvas.TextWidth(content[j]));
     end;

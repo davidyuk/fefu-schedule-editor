@@ -7,9 +7,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, CLFormMain, CLFormTable, CLFormContainer, CLFormChild,
-  CLDatabase, CLMetadata, CLFormEdit, CLFilter, CLFormScheduleCell
-  { you can add units after this };
+  Forms, CLFormMain, CLFormTable, CLFormContainer, CLFormChild, CLDatabase,
+  CLMetadata, CLFormEdit, CLFilter, clschedulecell, clexporttohtml;
 
 {$R *.res}
 

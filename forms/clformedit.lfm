@@ -79,6 +79,7 @@ inherited FormEdit: TFormEdit
   end
   object Datasource: TDatasource[4]
     DataSet = SQLQuery
+    OnDataChange = DatasourceDataChange
     left = 280
     top = 96
   end
