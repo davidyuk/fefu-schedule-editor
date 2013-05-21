@@ -38,7 +38,6 @@ type
     procedure SetTable(AIndex: Integer; AValue: TTable);
   public
     function GetTableId(ATableName: string): integer;
-    function GetTable(ATableName: string): TTable;
     property Table[AIndex: Integer]: TTable read GetTable write SetTable; default;
     property TableCount: Integer read GetTableCount;
     property Title: string read FTitle;
@@ -46,10 +45,72 @@ type
     destructor Destroy(); override;
   end;
 
+  function FieldListStr(AFormat: String; TableId: integer): String;
+  function GetSelectSQL(TableId, RecordId: integer): string;
+  function GetUpdateSQL(TableId, RecordId: integer): string;
+  function GetInsertSQL(TableId: integer): string;
+  function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2, sortRecordId: integer): string;
+
 var
   Metadata: TMetadata;
 
 implementation
+
+function FieldListStr(AFormat: String; TableId: integer): String;
+var
+  i: Integer;
+begin
+  Result := '';
+  with Metadata[TableId] do
+    for i := 0 to High(Columns) do begin
+      if i > 0 then Result += ', ';
+      Result += Format(AFormat, [Columns[i].name]);
+    end;
+end;
+
+function GetSelectSQL(TableId, RecordId: integer): string;
+begin
+  result:='SELECT '+FieldListStr('%s', TableId) + ' FROM '+Metadata[TableId].name;
+  if RecordId <> -1 Then result += ' WHERE id = '+intToStr(RecordId);
+end;
+
+function GetUpdateSQL(TableId, RecordId: integer): string;
+begin
+  result:='UPDATE '+Metadata[TableId].name+' SET '
+    +FieldListStr('%s=:%0:s', TableId) +' WHERE id = '+intToStr(RecordId);
+end;
+
+function GetInsertSQL(TableId: integer): string;
+begin
+  result:='INSERT INTO '+Metadata[TableId].name+' ('+FieldListStr('%s', TableId)
+    +') VALUES ('+FieldListStr(':%s', TableId)+')';
+end;
+
+function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2,
+  sortRecordId: integer): string;
+var InnerJoin: string; i: integer;
+begin
+  Result := '';
+  InnerJoin := '';
+  with Metadata[TableId] do begin
+    for i:= 0 to High(Columns) do begin
+      if i <> 0 Then begin Result += ', '; InnerJoin += #13#10; end;
+      if (Columns[i].referenceTable = '') or (i = outRecordId1) or (i = outRecordId2) Then begin
+        Result += name+'.'+Columns[i].name;
+      end else begin
+        Result += Columns[i].referenceTable+'.name';
+        InnerJoin+='INNER JOIN '+Columns[i].referenceTable+' ON '+name+'.'+Columns[i].name
+          +' = '+Columns[i].referenceTable+'.id';
+      end;
+    end;
+    Result := 'SELECT '+Result+' FROM '+name+InnerJoin;
+    if sortRecordId <> -1 Then begin
+      If Columns[sortRecordId].referenceTable = '' Then InnerJoin:= 'id'
+      else InnerJoin:= Columns[sortRecordId].referenceTable+'.id';
+      result += #13#10'ORDER BY '+InnerJoin;
+    end;
+  end;
+end;
 
 { TMetadata }
 
@@ -70,13 +131,8 @@ end;
 
 function TMetadata.GetTableId(ATableName: string): integer;
 begin
-  Result := -1;
   Result := FStringList.IndexOf(ATableName);
-end;
-
-function TMetadata.GetTable(ATableName: string): TTable;
-begin
-  Result := FTables[FStringList.IndexOf(ATableName)];
+  if Result = -1 Then Raise Exception.Create('Table "'+ATableName+'" not found.');
 end;
 
 constructor TMetadata.Create;

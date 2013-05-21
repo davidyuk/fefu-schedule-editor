@@ -1,7 +1,7 @@
 inherited FormEdit: TFormEdit
-  Left = 214
+  Left = 191
   Height = 246
-  Top = 188
+  Top = 338
   Width = 349
   Caption = 'Редактирование поля'
   ClientHeight = 246
@@ -54,9 +54,22 @@ inherited FormEdit: TFormEdit
     VertScrollBar.Page = 186
     Align = alClient
     BorderStyle = bsNone
+    ClientHeight = 186
+    ClientWidth = 349
     Color = clWhite
     ParentColor = False
     TabOrder = 1
+    object DBGrid1: TDBGrid
+      Left = 0
+      Height = 100
+      Top = 86
+      Width = 349
+      Align = alBottom
+      Color = clWindow
+      Columns = <>
+      DataSource = Datasource
+      TabOrder = 0
+    end
   end
   object LabelError: TLabel[2]
     Left = 5

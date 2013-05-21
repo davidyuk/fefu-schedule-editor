@@ -35,7 +35,6 @@ type
     private
       Filter: TFilter;
       procedure RefreshColumns;
-      function GetJoinedSQL:string;
     public
       procedure RefreshSQLContent; override;
       constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
@@ -68,26 +67,6 @@ begin
   end;
 end;
 
-function TFormTable.GetJoinedSQL: string;
-var
-  firstPart: string;
-  i: integer;
-begin
-with Metadata[TableId] do begin
-  firstPart := '';
-  result := '';
-  for i:= 0 to High(Columns) do begin
-    if Columns[i].referenceTable = '' Then begin
-      firstPart += ', '+name+'.'+Columns[i].name;
-    end else begin
-      firstPart += ', '+Columns[i].referenceTable+'.name';
-      result+='INNER JOIN '+Columns[i].referenceTable+' ON '+name+'.'+Columns[i].name+' = '+Columns[i].referenceTable+'.id'+#13#10;
-    end;
-  end;
-  result := Copy(firstPart, 3, length(firstPart))+' FROM '+name+#13#10+result;
-end;
-end;
-
 procedure TFormTable.RefreshSQLContent;
 begin
   SQLQuery.Open;
@@ -117,7 +96,7 @@ end;
 procedure TFormTable.ButtonFilterCancelClick(Sender: TObject);
 begin
   SQLQuery.Close;
-  SQLQuery.SQL.Text:='SELECT '+GetJoinedSQL;
+  SQLQuery.SQL.Text:=GetJoinedSQL(TableId, -1, -1, -1);
   SQLQuery.Open;
   if Sender <> Nil Then TButton(Sender).Visible:=false;
   RefreshColumns;
@@ -136,7 +115,7 @@ begin
     exit;
   end;
   SQLQuery.Close;
-  s:='SELECT '+GetJoinedSQL+' WHERE ';
+  s:=GetJoinedSQL(TableId, -1, -1, -1)+' WHERE '; { TODO : Как-то тут всё странно выглядит }
   for i:= 0 to state.count-1 do begin
     if i > 0 Then s += ' AND ' else s+= '';
     if Metadata[TableId].Columns[state.field[i]].referenceTable <> '' Then
@@ -162,7 +141,7 @@ var
   s, id: string;
   SQLQueryL: TSQLQuery;
 begin
-{ TODO : Надо спросить у пользователя, если он удаляет запись из справочника: присвоить этому полю значение Null, удалить все записи ссылающиеся на эту или установить всем записям, ссылающимся на эту значение Null }
+{ TODO : Надо спросить у пользователя, если он удаляет запись из справочника: присвоить этому полю значение Null; удалить все записи ссылающиеся на эту; установить всем записям, ссылающимся на эту значение Null }
   id := Datasource.DataSet.Fields.Fields[0].DisplayText;
   if id = '' Then exit;
   s:= '';

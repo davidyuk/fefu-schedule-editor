@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, CLFormMain, CLFormTable, CLFormContainer, CLFormChild, CLDatabase,
-  CLMetadata, CLFormEdit, CLFilter, clschedulecell, clexporttohtml;
+  CLMetadata, CLFormEdit, CLFilter, clschedulecell, clexporttohtml, CLSchedule;
 
 {$R *.res}
 

@@ -74,14 +74,16 @@ type
     constructor Create(TheOwner: TComponent); override;
   end;
 
+  TDrawGridCell = class;
+
+  TShowFullCell = procedure (Cell: TDrawGridCell) of object;
+  TEditCell = procedure (Cell: TDrawGridCell; Param: Integer) of object;
+
   { TDrawGridCell }
 
   TDrawGridCell = class(TComponent)
   private const
     Padding = 3;
-  type
-    TShowFullCell = procedure (Cell: TDrawGridCell) of object;
-    TEditCell = procedure (Cell: TDrawGridCell; Param: Integer) of object;
   private
     FRect: TRect;
     FTextWidth, FTextHeight: integer;
@@ -90,9 +92,11 @@ type
     FFixed: Boolean;
     FShowFullCell: TShowFullCell;
     FEditCell: TEditCell;
+    FPositionValue: TPoint;
     function GetText: string;
     procedure SetFixed(AFixed: boolean);
   public
+    property PositionValue: TPoint read FPositionValue write FPositionValue;
     property Items: ArrOfCellItem read FItems write FItems;
     property Fixed: boolean read FFixed write SetFixed;
     property Text: string read GetText; //for HTML export
@@ -101,10 +105,13 @@ type
     property Rect: TRect read FRect;
     procedure AddItem(AID: integer; AStrArr: array of string);
     procedure Draw(ACanvas: TCanvas; ARect: TRect; ShowButtonFull: Boolean);
+    procedure CalculateTextSize(ACanvas: TCanvas);
     procedure MouseClick(x, y: integer);
     procedure MouseMove(x, y: integer);
     constructor Create(TheOwner: TComponent; AShowFullCell: TShowFullCell; AEditCell: TEditCell);
   end;
+
+  ArrOfArrOfDrawGridCell = array of array of TDrawGridCell;
 
 implementation
 
@@ -251,10 +258,16 @@ begin
   FRect := ARect;
   if FFixed Then ACanvas.Brush.Color := $eeeeee
   else ACanvas.Brush.Color := clWhite;
-  ACanvas.FillRect(ARect);
+  ACanvas.FillRect(FRect);
   FTextWidth := 0;
-  top:= ARect.Top;
   SetLength(topOfItem, Length(FItems));
+  with ARect do begin
+    Top += Padding;
+    Left += Padding;
+    Bottom -= Padding;
+    Right -= Padding;
+  end;
+  top:= ARect.Top;
   For i:= 0 to High(FItems) do with FItems[i] do begin
     if i <> 0 Then begin
       top += 6;
@@ -265,14 +278,14 @@ begin
       if j = 0 Then topOfItem[i] := top;
       ACanvas.TextRect(ARect, ARect.Left, top, content[j]);
       top += ACanvas.TextHeight(content[j]);
-      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(content[j]));
+      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(content[j])+2*Padding);
     end;
   end;
-  FTextHeight := top-ARect.Top;
+  FTextHeight := top-ARect.Top+Padding*2;
 
   If FFixed or (Length(FButtons)=0) Then exit;
-  FButtons[0].Visible := ShowButtonFull and ((FTextHeight > (ARect.Bottom - ARect.Top)) or (FTextWidth > (ARect.Right - ARect.Left)));
-  FButtons[0].Top := FRect.Bottom-18;
+  FButtons[0].Visible := ShowButtonFull and ((FTextHeight > (FRect.Bottom - FRect.Top)) or (FTextWidth > (FRect.Right - FRect.Left)));
+  FButtons[0].Top := ARect.Bottom-18;
   FButtons[0].Left := FRect.Right-18;
   FButtons[1].Top := ARect.Top+2;
   if Length(FItems) = 0 Then FButtons[1].Left := FRect.Right-18
@@ -288,6 +301,21 @@ begin
   end;
   for i:= 0 to High(FButtons) do
     FButtons[i].Draw(ACanvas);
+end;
+
+procedure TDrawGridCell.CalculateTextSize(ACanvas: TCanvas);
+var
+  i, j: integer;
+begin
+  FTextWidth := 0;
+  FTextHeight := Padding*2;
+  For i:= 0 to High(FItems) do with FItems[i] do begin
+    if i <> 0 Then FTextHeight += 6;
+    for j:= 0 to High(content) do begin
+      FTextHeight += ACanvas.TextHeight(content[j]);
+      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(content[j])+Padding*2);
+    end;
+  end;
 end;
 
 procedure TDrawGridCell.MouseClick(x, y: integer);
