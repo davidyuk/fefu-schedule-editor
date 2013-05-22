@@ -11,7 +11,7 @@ type
 
   TCellItem = record
     id: integer;
-    content: array of string;
+    content: string;
   end;
 
   ArrOfCellItem = Array of TCellItem;
@@ -103,7 +103,7 @@ type
     property TextWidth: integer read FTextWidth;
     property TextHeight: integer read FTextHeight;
     property Rect: TRect read FRect;
-    procedure AddItem(AID: integer; AStrArr: array of string);
+    procedure AddItem(AID: integer; AContent: string);
     procedure Draw(ACanvas: TCanvas; ARect: TRect; ShowButtonFull: Boolean);
     procedure CalculateTextSize(ACanvas: TCanvas);
     procedure MouseClick(x, y: integer);
@@ -203,16 +203,12 @@ end;
 
 { TDrawGridCell }
 
-procedure TDrawGridCell.AddItem(AID: integer; AStrArr: array of string);
-var i: integer;
+procedure TDrawGridCell.AddItem(AID: integer; AContent: string);
 begin
   setLength(FItems, length(FItems)+1);
   with FItems[High(FItems)] do begin
     id := AID;
-    { TODO : Лучше надо копировать массив }
-    SetLength(content, Length(AStrArr));
-    for i:= 0 to High(AStrArr) do
-      content[i] := AStrArr[i];
+    content := AContent;
   end;
 end;
 
@@ -223,10 +219,7 @@ begin
   Result := '';
   For i:= 0 to High(FItems) do with FItems[i] do begin
     if i <> 0 Then Result += item_separator;
-    for j:= 0 to High(content) do begin
-      if j <> 0 Then Result += #13#10;
-      Result += content[j];
-    end;
+    Result += content;
   end;
 end;
 
@@ -254,12 +247,12 @@ procedure TDrawGridCell.Draw(ACanvas: TCanvas; ARect: TRect;
 var
   i, j, top: integer;
   topOfItem: array of integer;
+  t: TStringList;
 begin
   FRect := ARect;
   if FFixed Then ACanvas.Brush.Color := $eeeeee
   else ACanvas.Brush.Color := clWhite;
   ACanvas.FillRect(FRect);
-  FTextWidth := 0;
   SetLength(topOfItem, Length(FItems));
   with ARect do begin
     Top += Padding;
@@ -274,14 +267,15 @@ begin
       ACanvas.Pen.Color := clGray;
       ACanvas.Line(ARect.Left+5, top-3, ARect.Right-5, top-3);
     end;
-    for j:= 0 to High(content) do begin
-      if j = 0 Then topOfItem[i] := top;
-      ACanvas.TextRect(ARect, ARect.Left, top, content[j]);
-      top += ACanvas.TextHeight(content[j]);
-      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(content[j])+2*Padding);
+    topOfItem[i] := top;
+    t:= TStringList.Create;
+    t.Text := content;
+    for j:= 0 to t.Count-1 do begin
+      ACanvas.TextRect(ARect, ARect.Left, top, t.Strings[j]);
+      top += ACanvas.TextHeight(t.Strings[j]);
     end;
+    t.Free;
   end;
-  FTextHeight := top-ARect.Top+Padding*2;
 
   If FFixed or (Length(FButtons)=0) Then exit;
   FButtons[0].Visible := ShowButtonFull and ((FTextHeight > (FRect.Bottom - FRect.Top)) or (FTextWidth > (FRect.Right - FRect.Left)));
@@ -306,15 +300,19 @@ end;
 procedure TDrawGridCell.CalculateTextSize(ACanvas: TCanvas);
 var
   i, j: integer;
+  t: TStringList;
 begin
   FTextWidth := 0;
   FTextHeight := Padding*2;
   For i:= 0 to High(FItems) do with FItems[i] do begin
     if i <> 0 Then FTextHeight += 6;
-    for j:= 0 to High(content) do begin
-      FTextHeight += ACanvas.TextHeight(content[j]);
-      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(content[j])+Padding*2);
+    t:= TStringList.Create;
+    t.Text := content;
+    for j:= 0 to t.Count-1 do begin
+      FTextHeight += ACanvas.TextHeight(t.Strings[j]);
+      FTextWidth := Max(FTextWidth, ACanvas.TextWidth(t.Strings[j])+Padding*2);
     end;
+    t.Free;
   end;
 end;
 

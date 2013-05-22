@@ -48,8 +48,8 @@ implementation
 
 procedure TFormEdit.ButtonSaveCloseClick(Sender: TObject);
 var
-  {Query: TSQLQuery;
-  DataS: TDataSource;}
+  Query: TSQLQuery;
+  DataS: TDataSource;
   f: boolean;
   i: integer;
 begin
@@ -71,7 +71,7 @@ begin
     exit;
   end else
     LabelError.Visible := False;
-  {if RecordId = -1 Then begin
+  if RecordId = -1 Then begin
     DataS := TDataSource.Create(Self);
     Query := TSQLQuery.Create(Self);
     DataS.DataSet := Query;
@@ -79,7 +79,7 @@ begin
     Query.SQL.Text:='SELECT GEN_ID('+Metadata[TableId].name+', 1) FROM RDB$DATABASE';
     Query.Open;
     Datasource.DataSet.FieldByName('id').Value:=DataS.DataSet.Fields.Fields[0].Value;
-  end;}
+  end; { TODO: Нужно научиться задавать ID триггером на стороне СУБД }
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
   Transaction.Commit;

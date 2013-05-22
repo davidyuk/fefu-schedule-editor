@@ -51,7 +51,7 @@ procedure ReBuildGridContent(TheOwner: TComponent; var Cells: ArrOfArrOfDrawGrid
     FreeAndNil(FDatasource);
     FreeAndNil(FSQLQuery);
   end;
-  procedure RemoveEmpty(col: boolean);
+  procedure RemoveEmpty(col: boolean); { TODO: В этой функции ошибка: неправильно изменяется размер массива }
   var
     i, j, k, c, r: integer;
     f: boolean;
@@ -141,9 +141,9 @@ begin
           IntPtr(StringListV.Objects[j-1]));
     end;
   for i:= 1 to x do
-    Cells[i][0].AddItem(-1, [StringListH[i-1]]);
+    Cells[i][0].AddItem(-1, StringListH[i-1]);
   for i:= 1 to y do
-    Cells[0][i].AddItem(-1, [StringListV[i-1]]);
+    Cells[0][i].AddItem(-1, StringListV[i-1]);
 
   SQLQuery := TSQLQuery.Create(nil);
   Datasource := TDataSource.Create(nil);
@@ -165,14 +165,14 @@ begin
       x:= StringListH.IndexOfObject(TObject(IntPtr(Fields.Fields[Horizontal].AsInteger)));
       y:= StringListV.IndexOfObject(TObject(IntPtr(Fields.Fields[Vertical].AsInteger)));
       if (x <> -1) and (y <> -1) Then begin
-        SetLength(arrstr, 0);
+        s:= '';
         for i:= 0 to Fields.Count-1 do begin
           if not DisplayFields[i] then continue;
-          SetLength(arrstr, Length(arrstr)+1);
-          if ShowFieldsNames then arrstr[High(arrstr)] := Metadata[TableId].Columns[i].display+': ';
-          arrstr[High(arrstr)] += Fields.Fields[i].AsString;
+          if s <> '' Then s += #13#10;
+          if ShowFieldsNames then s += Metadata[TableId].Columns[i].display+': ';
+          s += Fields.Fields[i].AsString;
         end;
-        Cells[x+1][y+1].AddItem(Fields.Fields[0].AsInteger, arrstr);
+        Cells[x+1][y+1].AddItem(Fields.Fields[0].AsInteger, s);
       end;
       Next;
     end;

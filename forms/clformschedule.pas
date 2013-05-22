@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls, Forms,
   Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb, DB,
-  CLScheduleCell, Math, CLExportToHTML, CLFormContainer, CLFormEdit,
+  CLScheduleCell, Math, CLExportToHTML, CLExportToExcelVBS, CLFormContainer, CLFormEdit,
   CLSchedule, CLFilter;
 
 type
@@ -15,6 +15,7 @@ type
   { TFormSchedule }
 
   TFormSchedule = class(TFormChild)
+    ButtonExportExcel: TButton;
     ButtonFilterAdd: TButton;
     ButtonFilter: TButton;
     ButtonExportHTML: TButton;
@@ -38,6 +39,7 @@ type
     PanelTop: TPanel;
     PanelRight: TPanel;
     procedure ButtonAlineClick(Sender: TObject);
+    procedure ButtonExportExcelClick(Sender: TObject);
     procedure ButtonExportHTMLClick(Sender: TObject);
     procedure ButtonFilterAddClick(Sender: TObject);
     procedure ButtonFilterClick(Sender: TObject);
@@ -192,11 +194,16 @@ begin
     AlineRow(i, True);
 end;
 
+procedure TFormSchedule.ButtonExportExcelClick(Sender: TObject);
+begin
+  { TODO : Добавить слив конфликтов }
+  ExportToExcelVBS('Расписание занятий', Cells, ['Conflict1', 'Conflict2']);
+end;
+
 procedure TFormSchedule.ButtonExportHTMLClick(Sender: TObject);
 var
   a: ArrOfArrOfString;
   i, j: integer;
-  FConflicts: array of string;
 begin
   SetLength(a, Length(Cells));
   for i := 0 to High(Cells) do

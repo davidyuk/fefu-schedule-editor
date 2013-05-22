@@ -41,7 +41,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="14">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -122,6 +122,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLSchedule"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="export\clexporttoexcelvbs.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLExportToExcelVBS"/>
+      </Unit13>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
