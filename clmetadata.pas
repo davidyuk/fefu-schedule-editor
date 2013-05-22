@@ -49,7 +49,8 @@ type
   function GetSelectSQL(TableId, RecordId: integer): string;
   function GetUpdateSQL(TableId, RecordId: integer): string;
   function GetInsertSQL(TableId: integer): string;
-  function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2, sortRecordId: integer): string;
+  function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2: integer): string;
+  function GetOrderBySQL(TableId: integer; RecordId: integer): string;
 
 var
   Metadata: TMetadata;
@@ -86,8 +87,8 @@ begin
     +') VALUES ('+FieldListStr(':%s', TableId)+')';
 end;
 
-function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2,
-  sortRecordId: integer): string;
+function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2: integer
+  ): string;
 var InnerJoin: string; i: integer;
 begin
   Result := '';
@@ -104,10 +105,17 @@ begin
       end;
     end;
     Result := 'SELECT '+Result+' FROM '+name+InnerJoin;
-    if sortRecordId <> -1 Then begin
-      If Columns[sortRecordId].referenceTable = '' Then InnerJoin:= 'id'
-      else InnerJoin:= Columns[sortRecordId].referenceTable+'.id';
-      result += #13#10'ORDER BY '+InnerJoin;
+  end;
+end;
+
+function GetOrderBySQL(TableId: integer; RecordId: integer): string;
+begin
+  Result := '';
+  with Metadata[TableId] do begin
+    if RecordId <> -1 Then begin
+      If Columns[RecordId].referenceTable = '' Then Result:= 'id'
+      else Result:= Columns[RecordId].referenceTable+'.id';
+      Result := 'ORDER BY '+Result;
     end;
   end;
 end;

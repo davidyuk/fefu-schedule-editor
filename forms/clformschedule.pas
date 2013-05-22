@@ -8,13 +8,15 @@ uses
   Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls, Forms,
   Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb, DB,
   CLScheduleCell, Math, CLExportToHTML, CLFormContainer, CLFormEdit,
-  CLSchedule;
+  CLSchedule, CLFilter;
 
 type
 
   { TFormSchedule }
 
   TFormSchedule = class(TFormChild)
+    ButtonFilterAdd: TButton;
+    ButtonFilter: TButton;
     ButtonExportHTML: TButton;
     ButtonAline: TButton;
     CheckBoxAutoSize: TCheckBox;
@@ -24,11 +26,12 @@ type
     ComboBoxV: TComboBox;
     ComboBoxSort: TComboBox;
     DrawGrid: TDrawGrid;
-    LabelError: TLabel;
     LabelH: TLabel;
     LabelV: TLabel;
     LabelSort: TLabel;
     PaintBox: TPaintBox;
+    PanelDisplayControls: TPanel;
+    PanelDisplay: TPanel;
     PanelParams: TPanel;
     PanelControls: TPanel;
     PanelHint: TPanel;
@@ -36,6 +39,8 @@ type
     PanelRight: TPanel;
     procedure ButtonAlineClick(Sender: TObject);
     procedure ButtonExportHTMLClick(Sender: TObject);
+    procedure ButtonFilterAddClick(Sender: TObject);
+    procedure ButtonFilterClick(Sender: TObject);
     procedure ComboBoxChange(Sender: TObject);
     procedure ParamsChange(Sender: TObject);
     procedure DrawGridClick(Sender: TObject);
@@ -59,6 +64,7 @@ type
     ShowEmptyLines, ShowFieldsNames, DoAline: boolean;
     DisplayFields: array of boolean;
     CheckBoxes: array of TCheckBox;
+    Filter: TFilter;
     function GetItemCount(ATableId: integer): integer;
     procedure ShowFullTableCell(content: TDrawGridCell);
     procedure EditCellItem(Sender: TDrawGridCell; Param: integer);
@@ -109,6 +115,7 @@ begin
   end;
   ShowEmptyLines := true;
   ShowFieldsNames:= false;
+  Filter := TFilter.Create(Self, Metadata[TableId], PanelDisplay);
   ReBuildDrawGridContent;
 end;
 
@@ -201,12 +208,23 @@ begin
   ExportToHTML('Расписание занятий', a, ['Conflict1', 'Conflict2']);
 end;
 
+procedure TFormSchedule.ButtonFilterAddClick(Sender: TObject);
+begin
+  Filter.AddPanel;
+end;
+
+procedure TFormSchedule.ButtonFilterClick(Sender: TObject);
+begin
+  ReBuildDrawGridContent;
+  DrawGrid.Invalidate;
+end;
+
 procedure TFormSchedule.ShowFullTableCell(content: TDrawGridCell);
 begin
   PanelHint.Width := content.TextWidth + 2; //тк border - 1px
   PanelHint.Height := content.TextHeight + 2;
-  PanelHint.Left := content.Rect.Left + DrawGrid.Left;
-  PanelHint.Top := content.Rect.Top + DrawGrid.Top;
+  PanelHint.Left := content.Rect.Left + DrawGrid.Left + PanelDisplay.Left{ + 1}; { TODO: Немного кривой код }
+  PanelHint.Top := content.Rect.Top + DrawGrid.Top + PanelDisplay.Top{ + 1};
   FullTableCell.Items := content.Items;
   FullTableCell.Fixed := False;
   PanelHint.Visible := True;
@@ -278,11 +296,15 @@ end;
 
 procedure TFormSchedule.ReBuildDrawGridContent;
 begin
-  ReBuildGridContent(DrawGrid, Cells, TableId,
+  ReBuildGridContent(Self, Cells, TableId,
     IntPtr(ComboBoxH.Items.Objects[ComboBoxH.ItemIndex]),
     IntPtr(ComboBoxV.Items.Objects[ComboBoxV.ItemIndex]),
-    ComboBoxSort.ItemIndex, @ShowFullTableCell, @EditCellItem,
+    ComboBoxSort.ItemIndex,
+    Filter,
+    @ShowFullTableCell, @EditCellItem,
     ShowEmptyLines, ShowFieldsNames, DisplayFields);
+  DrawGrid.ColCount := Length(Cells);
+  DrawGrid.RowCount := Length(Cells[0]);
   DoAline := CheckBoxAutoSize.Checked;
 end;
 

@@ -40,19 +40,24 @@ type
     destructor Destroy; override;
   end;
 
+  ArrOfStr = array of string;
+
   { TFilter }
 
   TFilter = class(TComponent)
   private
-    FColumns: array of TColumn;
+    FTable: TTable;
     FParent: TWinControl;
     Panels: array of TFilterPanel;
+    function GetFilterState: TFilterState;
+    procedure SetFilterState(AFilterState: TFilterState);
   public
     procedure AddPanel;
     procedure RemovePanel(panel: TFilterPanel);
-    function GetFilterState: TFilterState;
-    procedure SetFilterState(AFilterState: TFilterState);
-    constructor Create(TheOwner: TComponent; AColumns: ArrOfColumns; AParent: TWinControl);
+    property FilterState: TFilterState read GetFilterState write SetFilterState;
+    function GetWhereSQL(var Params: ArrOfStr; State: TFilterState): String;
+    function GetWhereSQL(var Params: ArrOfStr): String; overload;
+    constructor Create(TheOwner: TComponent; ATable: TTable; AParent: TWinControl);
     destructor Destroy; override;
   end;
 
@@ -123,7 +128,7 @@ begin
   if length(Panels)=filter_maxcount Then exit;
   setLength(Panels, length(Panels)+1);
   n := High(Panels);
-  Panels[n] := TFilterPanel.Create(TComponent(Self), FColumns);
+  Panels[n] := TFilterPanel.Create(TComponent(Self), FTable.Columns);
   Panels[n].Parent := FParent;
 end;
 
@@ -143,6 +148,29 @@ begin
         Panels[j] := Panels[j+1];
     end;
   setLength(Panels, length(Panels)-1);
+end;
+
+function TFilter.GetWhereSQL(var Params: ArrOfStr; State: TFilterState): String;
+var
+  i: integer;
+begin
+  Result := 'WHERE ';
+  for i:= 0 to state.count-1 do begin
+    if i > 0 Then Result += ' AND ';
+    if FTable.Columns[state.field[i]].referenceTable <> '' Then
+      Result += FTable.Columns[state.field[i]].referenceTable+'.name'
+    else
+      Result += FTable.name+'.'+FTable.Columns[state.field[i]].name;
+    Result += ' '+Format(filter_operators[state.oper[i]], [':P'+intToStr(i)]);
+  end;
+  SetLength(Params, state.count);
+  for i:= 0 to state.count-1 do
+    Params[i]:= filter_contentleft[state.oper[i]]+state.content[i]+filter_contentright[state.oper[i]]
+end;
+
+function TFilter.GetWhereSQL(var Params: ArrOfStr): String;
+begin
+  GetWhereSQL(Params, FilterState);
 end;
 
 function TFilter.GetFilterState: TFilterState;
@@ -174,12 +202,12 @@ begin
   end;
 end;
 
-constructor TFilter.Create(TheOwner: TComponent; AColumns: ArrOfColumns;
+constructor TFilter.Create(TheOwner: TComponent; ATable: TTable;
   AParent: TWinControl);
 begin
   inherited Create(TheOwner);
   setLength(Panels, 0);
-  FColumns := AColumns;
+  FTable := ATable;
   FParent := AParent;
   AddPanel;
 end;

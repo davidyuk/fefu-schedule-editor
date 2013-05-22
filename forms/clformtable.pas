@@ -83,7 +83,7 @@ begin
   SQLQuery.Transaction := Transaction;
   Datasource.Enabled := True;
   Caption:= Metadata[TableId].display;
-  Filter := TFilter.Create(Self, Metadata[TableId].Columns, Self);
+  Filter := TFilter.Create(Self, Metadata[TableId], Self);
 end;
 
 procedure TFormTable.ButtonEditClick(Sender: TObject);
@@ -96,7 +96,7 @@ end;
 procedure TFormTable.ButtonFilterCancelClick(Sender: TObject);
 begin
   SQLQuery.Close;
-  SQLQuery.SQL.Text:=GetJoinedSQL(TableId, -1, -1, -1);
+  SQLQuery.SQL.Text:=GetJoinedSQL(TableId, -1, -1);
   SQLQuery.Open;
   if Sender <> Nil Then TButton(Sender).Visible:=false;
   RefreshColumns;
@@ -106,29 +106,18 @@ procedure TFormTable.ButtonFilterFindClick(Sender: TObject);
 var
   i: integer;
   s: string;
-  state: TFilterState;
+  sArr: array of string;
 begin
-  state := Filter.GetFilterState;
-  if state.count = 0 Then begin
+  s:=GetJoinedSQL(TableId, -1, -1)+' '+Filter.GetWhereSQL(sArr);
+  if Length(sArr) = 0 Then begin
     ButtonFilterCancelClick(Nil);
     ButtonFilterCancel.Visible := false;
     exit;
   end;
   SQLQuery.Close;
-  s:=GetJoinedSQL(TableId, -1, -1, -1)+' WHERE '; { TODO : Как-то тут всё странно выглядит }
-  for i:= 0 to state.count-1 do begin
-    if i > 0 Then s += ' AND ' else s+= '';
-    if Metadata[TableId].Columns[state.field[i]].referenceTable <> '' Then
-      s += Metadata[TableId].Columns[state.field[i]].referenceTable+'.name'
-    else
-      s += Metadata[TableId].name+'.'+Metadata[TableId].Columns[state.field[i]].name;
-    s += ' '+Format(filter_operators[state.oper[i]], [':P'+intToStr(i)]);
-  end;
   SQLQuery.SQL.Text := s;
-  for i:= 0 to state.count-1 do begin
-    s := filter_contentleft[state.oper[i]]+state.content[i]+filter_contentright[state.oper[i]];
-    SQLQuery.Params.ParamByName('P'+intToStr(i)).AsString:= s;
-  end;
+  for i:= 0 to High(sArr) do
+    SQLQuery.ParamByName('P'+intToStr(i)).AsString:= sArr[i];
   SQLQuery.Open;
   ButtonFilterCancel.Visible:=true;
   RefreshColumns;
