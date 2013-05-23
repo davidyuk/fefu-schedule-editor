@@ -5,23 +5,29 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
     <style>
 	  body { margin: 0; padding: 0; font-family: sans-serif; }
-      table { border-collapse: collapse; margin: 0; margin-bottom: 20px; padding: 0; }
-      tr, td { border: 1px solid black; margin: 0; padding: 3px; vertical-align: top; }
-	  tr:first-child { background-color: #EEEEEE; }
-	  tr:first-child td { border-color: white; }
-	  td:first-child { background-color: #EEEEEE; border-color: white; }
-	  hr { margin: 3px; }
-	  div { border: 1px solid black; margin: 0; padding: 3px; }
+      table { border-collapse: collapse; margin: 3px; padding: 0; }
+      #schedule { margin: 0; margin-bottom: 20px; }
+	  tr, td { border: 1px solid black; margin: 0; padding: 3px; vertical-align: top; }
+	  #schedule tr:first-child { background-color: #EEEEEE; }
+	  #schedule tr:first-child td { border-color: white; }
+	  #schedule td:first-child { background-color: #EEEEEE; border-color: white; }
+	  hr { margin: 3px; border: 0; border-top: 1px solid black; }
+	  div { margin: 3px; padding: 3px; }
+	  h1 { margin: 3px; padding: 0; font-size: 160%; }
+	  h2 { margin: 3px; padding: 0; font-size: 130%; }
 	  ol, li { margin: 2px; }
     </style>
   </head>
   <body>
 
+<div>
+<h1><%title%></h1>
+<%information%>
+<%filters%>
+</div>
 <%table%>
 
 <div>
-<%information%><br>
-<%filters%><br>
 <%conflicts%>
 </div>
 

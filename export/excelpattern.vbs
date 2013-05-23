@@ -27,3 +27,4 @@ objExcel.Rows.AutoFit()
 objExcel.Columns.AutoFit()
 objWorkbook.SaveAs(strFileName)
 objExcel.Quit
+MsgBox "Создание файла завершено успешно."&vbCrLf&strFileName

@@ -7,14 +7,15 @@ interface
 uses
   Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls, Forms,
   Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb, DB,
-  CLScheduleCell, Math, CLExportToHTML, CLExportToExcelVBS, CLFormContainer, CLFormEdit,
-  CLSchedule, CLFilter;
+  CLScheduleCell, Math, CLFormContainer, CLFormEdit,
+  CLSchedule, CLFilter, CLExport;
 
 type
 
   { TFormSchedule }
 
   TFormSchedule = class(TFormChild)
+    ButtonFilterCancel: TButton;
     ButtonExportExcel: TButton;
     ButtonFilterAdd: TButton;
     ButtonFilter: TButton;
@@ -42,6 +43,7 @@ type
     procedure ButtonExportExcelClick(Sender: TObject);
     procedure ButtonExportHTMLClick(Sender: TObject);
     procedure ButtonFilterAddClick(Sender: TObject);
+    procedure ButtonFilterCancelClick(Sender: TObject);
     procedure ButtonFilterClick(Sender: TObject);
     procedure ComboBoxChange(Sender: TObject);
     procedure ParamsChange(Sender: TObject);
@@ -195,24 +197,29 @@ begin
 end;
 
 procedure TFormSchedule.ButtonExportExcelClick(Sender: TObject);
+var t: TFilterState;
 begin
+  if ButtonFilterCancel.Visible Then t := Filter.FilterState
+  else t.count := 0;
   { TODO : Добавить слив конфликтов }
-  ExportToExcelVBS('Расписание занятий', Cells, ['Conflict1', 'Conflict2']);
+  ExportToExcelVBS('Расписание занятий',
+    ComboBoxH.Items.Strings[ComboBoxH.ItemIndex],
+    ComboBoxV.Items.Strings[ComboBoxV.ItemIndex],
+    ComboBoxSort.Items.Strings[ComboBoxSort.ItemIndex],
+    TableId,t, Cells, ['Conflict1', 'Conflict2']);
 end;
 
 procedure TFormSchedule.ButtonExportHTMLClick(Sender: TObject);
-var
-  a: ArrOfArrOfString;
-  i, j: integer;
+var t: TFilterState;
 begin
-  SetLength(a, Length(Cells));
-  for i := 0 to High(Cells) do
-  begin
-    SetLength(a[i], Length(Cells[i]));
-    for j := 0 to High(Cells[i]) do
-      a[i][j] := Cells[i][j].Text;
-  end; { TODO : Добавить слив конфликтов }
-  ExportToHTML('Расписание занятий', a, ['Conflict1', 'Conflict2']);
+  if ButtonFilterCancel.Visible Then t := Filter.FilterState
+  else t.count := 0;
+  { TODO : Добавить слив конфликтов }
+  ExportToHTML('Расписание занятий',
+    ComboBoxH.Items.Strings[ComboBoxH.ItemIndex],
+    ComboBoxV.Items.Strings[ComboBoxV.ItemIndex],
+    ComboBoxSort.Items.Strings[ComboBoxSort.ItemIndex],
+    TableId,t, Cells, ['Conflict1', 'Conflict2']);
 end;
 
 procedure TFormSchedule.ButtonFilterAddClick(Sender: TObject);
@@ -220,8 +227,16 @@ begin
   Filter.AddPanel;
 end;
 
+procedure TFormSchedule.ButtonFilterCancelClick(Sender: TObject);
+begin
+  ButtonFilterCancel.Visible := false;
+  ReBuildDrawGridContent;
+  DrawGrid.Invalidate;
+end;
+
 procedure TFormSchedule.ButtonFilterClick(Sender: TObject);
 begin
+  ButtonFilterCancel.Visible := true;
   ReBuildDrawGridContent;
   DrawGrid.Invalidate;
 end;
@@ -307,7 +322,7 @@ begin
     IntPtr(ComboBoxH.Items.Objects[ComboBoxH.ItemIndex]),
     IntPtr(ComboBoxV.Items.Objects[ComboBoxV.ItemIndex]),
     ComboBoxSort.ItemIndex,
-    Filter,
+    ButtonFilterCancel.Visible ,Filter,
     @ShowFullTableCell, @EditCellItem,
     ShowEmptyLines, ShowFieldsNames, DisplayFields);
   DrawGrid.ColCount := Length(Cells);

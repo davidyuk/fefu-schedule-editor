@@ -1,7 +1,7 @@
 inherited FormSchedule: TFormSchedule
-  Left = 402
+  Left = 147
   Height = 481
-  Top = 152
+  Top = 129
   Width = 681
   Caption = 'Расписание занятий'
   ClientHeight = 481
@@ -254,7 +254,7 @@ inherited FormSchedule: TFormSchedule
         TabOrder = 0
       end
       object ButtonFilterAdd: TButton
-        Left = 322
+        Left = 204
         Height = 27
         Top = 3
         Width = 27
@@ -263,6 +263,18 @@ inherited FormSchedule: TFormSchedule
         Caption = '+'
         OnClick = ButtonFilterAddClick
         TabOrder = 1
+      end
+      object ButtonFilterCancel: TButton
+        Left = 234
+        Height = 27
+        Top = 3
+        Width = 115
+        Align = alRight
+        BorderSpacing.Around = 3
+        Caption = 'Отменить фильтр'
+        OnClick = ButtonFilterCancelClick
+        TabOrder = 2
+        Visible = False
       end
     end
   end

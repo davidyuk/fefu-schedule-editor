@@ -10,7 +10,7 @@ uses
 
 procedure ReBuildGridContent(TheOwner: TComponent; var Cells: ArrOfArrOfDrawGridCell;
   TableId, Horizontal, Vertical, SortBy: Integer;
-  Filter: TFilter;
+  UseFilter: boolean; Filter: TFilter;
   ShowFullTableCell: TShowFullCell; EditCellItem: TEditCell;
   ShowEmptyLines, ShowFieldsNames: boolean; DisplayFields: array of boolean);
 
@@ -18,7 +18,7 @@ implementation
 
 procedure ReBuildGridContent(TheOwner: TComponent; var Cells: ArrOfArrOfDrawGridCell;
   TableId, Horizontal, Vertical, SortBy: Integer;
-  Filter: TFilter;
+  UseFilter: boolean; Filter: TFilter;
   ShowFullTableCell: TShowFullCell; EditCellItem: TEditCell;
   ShowEmptyLines, ShowFieldsNames: boolean; DisplayFields: array of boolean);
   procedure FillStringList(StringList: TStringList; Field: integer; FilterState: TFilterState);
@@ -105,7 +105,8 @@ begin
     for j:= 0 to High(Cells[i]) do
       Cells[i][j].Free;
 
-  FilterState := Filter.FilterState;
+  if UseFilter Then FilterState := Filter.FilterState
+  else FilterState.count := 0;
   FilterStateH.count := 0;
   FilterStateV.count := 0;
   i := 0;

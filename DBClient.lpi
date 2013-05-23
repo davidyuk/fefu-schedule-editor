@@ -41,7 +41,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="14">
+    <Units Count="13">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -108,25 +108,20 @@
         <UnitName Value="CLFormSchedule"/>
       </Unit9>
       <Unit10>
-        <Filename Value="export\clexporttohtml.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLExportToHTML"/>
-      </Unit10>
-      <Unit11>
         <Filename Value="clschedulecell.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLScheduleCell"/>
-      </Unit11>
-      <Unit12>
+      </Unit10>
+      <Unit11>
         <Filename Value="clschedule.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLSchedule"/>
-      </Unit12>
-      <Unit13>
-        <Filename Value="export\clexporttoexcelvbs.pas"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="export\clexport.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CLExportToExcelVBS"/>
-      </Unit13>
+        <UnitName Value="CLExport"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
