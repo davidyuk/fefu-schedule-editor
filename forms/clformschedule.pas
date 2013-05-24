@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Controls, Graphics, Dialogs, StdCtrls, Forms,
-  Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb, DB,
-  CLScheduleCell, Math, CLFormContainer, CLFormEdit,
+  Grids, ExtCtrls, CLFormChild, CLDatabase, CLMetadata, sqldb,
+  CLScheduleCell, Math, CLFormContainer, CLFormEdit, CLFormTable,
   CLSchedule, CLFilter, CLExport;
 
 type
@@ -46,6 +46,9 @@ type
     procedure ButtonFilterCancelClick(Sender: TObject);
     procedure ButtonFilterClick(Sender: TObject);
     procedure ComboBoxChange(Sender: TObject);
+    procedure DrawGridDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure DrawGridDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
     procedure ParamsChange(Sender: TObject);
     procedure DrawGridClick(Sender: TObject);
     procedure DrawGridDblClick(Sender: TObject);
@@ -69,7 +72,6 @@ type
     DisplayFields: array of boolean;
     CheckBoxes: array of TCheckBox;
     Filter: TFilter;
-    function GetItemCount(ATableId: integer): integer;
     procedure ShowFullTableCell(content: TDrawGridCell);
     procedure EditCellItem(Sender: TDrawGridCell; Param: integer);
     procedure AlineRow(ARow: integer; common: boolean = False);
@@ -175,6 +177,22 @@ begin
   DrawGrid.Invalidate;
 end;
 
+procedure TFormSchedule.DrawGridDragDrop(Sender, Source: TObject; X, Y: Integer
+  );
+begin
+
+end;
+
+procedure TFormSchedule.DrawGridDragOver(Sender, Source: TObject; X,
+  Y: Integer; State: TDragState; var Accept: Boolean);
+begin
+  LabelH.Caption := Format('%d, %d', [x, y]);
+  {if Source is TDrawGrid Then begin
+    //TDrawGrid(Source).
+  end;}
+  Accept := false;
+end;
+
 procedure TFormSchedule.ParamsChange(Sender: TObject);
 var i: integer;
 begin
@@ -201,7 +219,6 @@ var t: TFilterState;
 begin
   if ButtonFilterCancel.Visible Then t := Filter.FilterState
   else t.count := 0;
-  { TODO : Добавить слив конфликтов }
   ExportToExcelVBS('Расписание занятий',
     ComboBoxH.Items.Strings[ComboBoxH.ItemIndex],
     ComboBoxV.Items.Strings[ComboBoxV.ItemIndex],
@@ -214,7 +231,6 @@ var t: TFilterState;
 begin
   if ButtonFilterCancel.Visible Then t := Filter.FilterState
   else t.count := 0;
-  { TODO : Добавить слив конфликтов }
   ExportToHTML('Расписание занятий',
     ComboBoxH.Items.Strings[ComboBoxH.ItemIndex],
     ComboBoxV.Items.Strings[ComboBoxV.ItemIndex],
@@ -254,37 +270,42 @@ end;
 
 procedure TFormSchedule.EditCellItem(Sender: TDrawGridCell; Param: integer);
 var
-  Form: TFormEdit;
-  i, j: integer;
-  f: boolean;
+  FormEdit: TFormEdit;
+  FormTable: TFormTable;
+  SQLQuery: TSQLQuery;
+  FilterState: TFilterState;
 begin
-  f := False;
-  for i := 0 to High(Cells) do
-  begin
-    for j := 0 to high(Cells[i]) do
-      if Cells[i][j] = Sender then
-      begin
-        f := True;
-        Break;
-      end;
-    if f then
-      Break;
+  if Param = MaxInt Then begin
+    FormTable := TFormTable.Create(Application, TableId);
+    FilterState.count := 0; // 2
+    { FilterState.field[0] := ComboBoxH.ItemIndex;
+    FilterState.oper[0] := 2;
+    FilterState.content[0] := ComboBoxH.Caption;
+    FilterState.field[1] := ComboBoxV.ItemIndex;
+    FilterState.oper[1] := 2;
+    FilterState.content[1] := ComboBoxV.Caption; }
+    FormTable.SetFilterState(FilterState);
+    FormContainer.AddForm(FormTable);
+    exit;
   end;
-  if Param = 0 then
-  begin
-    Form := TFormEdit.Create(Application, TableId, -1);
-    Form.SetDefaultValue(IntPtr(ComboBoxH.Items.Objects[ComboBoxH.ItemIndex]), IntToStr(Sender.PositionValue.x));
-    Form.SetDefaultValue(IntPtr(ComboBoxV.Items.Objects[ComboBoxV.ItemIndex]), IntToStr(Sender.PositionValue.y));
-    FormContainer.AddForm(Form);
+  if Param = 0 then begin
+    FormEdit := TFormEdit.Create(Application, TableId, -1);
+    FormEdit.SetDefaultValue(IntPtr(ComboBoxH.Items.Objects[ComboBoxH.ItemIndex]), IntToStr(Sender.PositionValue.x));
+    FormEdit.SetDefaultValue(IntPtr(ComboBoxV.Items.Objects[ComboBoxV.ItemIndex]), IntToStr(Sender.PositionValue.y));
+    FormContainer.AddForm(FormEdit);
   end;
-  if Param > 0 then
-  begin
-    Form := TFormEdit.Create(Application, TableId, Sender.Items[Param - 1].id);
-    FormContainer.AddForm(Form);
+  if Param > 0 then begin
+    FormEdit := TFormEdit.Create(Application, TableId, Sender.Items[Param - 1].id);
+    FormContainer.AddForm(FormEdit);
   end;
-  if Param < 0 then
-  begin
-    { TODO: Разобраться с удалением }
+  if Param < 0 then begin
+    SQLQuery := TSQLQuery.Create(nil);
+    SQLQuery.Transaction := Transaction;
+    SQLQuery.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+IntToStr(Sender.Items[-Param-1].id);
+    SQLQuery.ExecSQL;
+    Transaction.Commit;
+    SQLQuery.Free;
+    FormContainer.RefreshSQLContent;
   end;
 end;
 
@@ -333,7 +354,7 @@ end;
 procedure TFormSchedule.DrawGridDrawCell(Sender: TObject; aCol, aRow: integer;
   aRect: TRect; aState: TGridDrawState);
 var
-  i, j, topPos, maxWidth, t: integer;
+  i, j: integer;
 begin
   Cells[aCol][aRow].Draw(DrawGrid.Canvas, aRect, True);
   if DoAline then begin
@@ -351,8 +372,7 @@ var
   CellX, CellY, i, j: integer;
 begin
   MouseOnGrid := Point(x, y);
-  with Sender as TDrawGrid do
-  begin
+  with Sender as TDrawGrid do begin
     MouseToCell(x, y, CellX, CellY);
     for i := 0 to High(Cells) do
       for j := 0 to High(Cells[i]) do
@@ -365,16 +385,17 @@ end;
 
 procedure TFormSchedule.DrawGridClick(Sender: TObject);
 begin
-  with Sender as TDrawGrid do
+  with Sender as TDrawGrid do begin
     Cells[Col][Row].MouseClick(MouseOnGrid.x, MouseOnGrid.y);
+    BeginDrag(False);
+  end;
 end;
 
 procedure TFormSchedule.DrawGridDblClick(Sender: TObject);
 var
   Cell: TPoint;
 begin
-  with Sender as TDrawGrid do
-  begin
+  with Sender as TDrawGrid do begin
     MouseToCell(MouseOnGrid.x, MouseOnGrid.y, Cell.x, Cell.y);
     if (Cell.x <> 0) and (Cell.y <> 0) then
       exit;
@@ -394,23 +415,6 @@ procedure TFormSchedule.RefreshSQLContent;
 begin
   ReBuildDrawGridContent;
   DrawGrid.Invalidate;
-end;
-
-function TFormSchedule.GetItemCount(ATableId: integer): integer;
-var
-  FSQLQuery: TSQLQuery;
-  FDatasource: TDataSource;
-begin
-  { TODO : От этой функции нужно избавится, если я разберусь с перестройкой DrawGrid }
-  FSQLQuery := TSQLQuery.Create(nil);
-  FDatasource := TDataSource.Create(nil);
-  FDatasource.DataSet := FSQLQuery;
-  FSQLQuery.Transaction := Transaction;
-  FSQLQuery.SQL.Text := 'SELECT COUNT(*) FROM ' + Metadata[ATableId].Name;
-  FSQLQuery.Open;
-  Result := FDatasource.DataSet.Fields.Fields[0].Value;
-  FreeAndNil(FDatasource);
-  FreeAndNil(FSQLQuery);
 end;
 
 end.

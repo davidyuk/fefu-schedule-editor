@@ -22,6 +22,12 @@ const
   dpInformation = '<%information%>';
   dpFilters = '<%filters%>';
   dpConflicts = '<%conflicts%>';
+  dpLabelFilter = 'Выбранные фильтры:';
+  dpLabelConflictsFound = 'Обнаружены конфликты:';
+  dpLabelConflictsNotFound = 'Конфликты не обнаружены';
+  dpLabelH = 'По горизонтали';
+  dpLabelV = 'По вертикали';
+  dpLabelS = 'Отсортированно по';
 
 procedure SaveStringListToFile(StringList: TStringList; FileName: string; Ansi: boolean);
 var s: string;
@@ -57,10 +63,10 @@ procedure ExportToExcelVBS(ATitle: string; ACaptionH, ACaptionV, ACaptionS: stri
   TableId: integer; AFilterState: TFilterState; ACells: ArrOfArrOfDrawGridCell;
   AConflicts: array of string);
 var
-  fileName, table, information, filters, conflicts: string;
-  i, j, k, maxCount, curRow: integer; //!
+  fileName, title, table, information, filters, conflicts: string;
+  i, j, k, maxCount, curRow: integer;
   content: TStringList;
-  s: string; //!
+  s: string;
 begin
   fileName := GetFileName('VB скрипт (*.vbs)|*.vbs|');
   if fileName = '' Then exit;
@@ -68,9 +74,57 @@ begin
   content := TStringList.Create;
   content.LoadFromFile('export\excelpattern.vbs');
 
-  information := 'беда';
+  curRow := 1;
+  title := Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 1, ATitle]);
+  title += Format(#9'.Cells(%d, %d).Font.Size = 18'#13#10, [curRow, 1]);
+  title += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge', [curRow, 3]);
+  curRow += 2;
+  information := Format(#9'.Range(C(1, %d, %d, %d)).Borders.Color = 0'#13#10, [curRow, 3, curRow+1]);
+  information += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 1, dpLabelH]);
+  information += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 2, dpLabelV]);
+  information += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 3, dpLabelS]);
+  curRow += 1;
+  information += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 1, ACaptionH]);
+  information += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 2, ACaptionV]);
+  information += Format(#9'.Cells(%d, %d).Value = "%s"', [curRow, 3, ACaptionS]);
+  curRow += 2;
 
-  filters := 'фильтры какие-нибудь'; { TODO : надо добавить вывод фильтров }
+  if AFilterState.count <> 0 Then begin
+    filters := Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 1, dpLabelFilter]);
+    filters += Format(#9'.Cells(%d, %d).Font.Size = 16'#13#10, [curRow, 1]);
+    filters += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
+    curRow += 1;
+    j:= curRow;
+    for i:= 0 to AFilterState.count-1 do begin
+      filters += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10,
+        [curRow, 1, Metadata[TableId].Columns[AFilterState.field[i]].display]);
+      filters += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10,
+        [curRow, 2, filter_captions[AFilterState.oper[i]]]);
+      filters += Format(#9'.Cells(%d, %d).Value = """%s"""'#13#10,
+        [curRow, 3, AFilterState.content[i]]);
+      curRow += 1;
+    end;
+    filters += Format(#9'.Range(C(1, %d, %d, %d)).Borders.Color = 0', [j, 3, curRow-1]);
+    curRow += 1;
+  end else
+    filters := '';
+
+  if Length(AConflicts) <> 0 Then begin
+    conflicts := Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow, 1, dpLabelConflictsFound]);
+    conflicts += Format(#9'.Cells(%d, %d).Font.Size = 16'#13#10, [curRow, 1]);
+    conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
+    curRow += 1;
+    j:= curRow;
+    for i:= 0 to High(AConflicts) do begin
+      conflicts += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10,
+        [curRow, 1, AConflicts[i]]);
+      conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
+      curRow += 1;
+    end;
+    conflicts += Format(#9'.Range(C(1, %d, %d, %d)).Borders.Color = 0', [j, 3, curRow-1]);
+    curRow += 2;
+  end else
+    conflicts := Format(#9'.Cells(%d, %d).Value = "%s"', [curRow, 1, dpLabelConflictsNotFound]);
 
   curRow := 0;
   table := '';
@@ -84,27 +138,17 @@ begin
           s := StringsReplace(ACells[j][i].Items[k].content, [#13#10], ['"&vbCrLf&"'], [rfReplaceAll])
         else
           s := '';
-        table += Format('objExcel.Cells(%d, %d).Value = "%s"'#13#10, [curRow+k+1, j+1, s]);
+        if s <> '' Then table += Format(#9'.Cells(%d, %d).Value = "%s"'#13#10, [curRow+k+1, j+1, s]);
       end;
-    table += Format('objExcel.Range(C(1, %d, 1, %d)).Merge'#13#10, [curRow+1, curRow+maxCount]);
+    table += Format(#9'.Range(C(1, %d, 1, %d)).Merge'#13#10, [curRow+1, curRow+maxCount]);
     curRow += maxCount;
   end;
-  table += 'GridW = '+IntToStr(Length(ACells))+#13#10;
-  table += 'GridH = '+IntToStr(curRow);
-
-  {conflicts := '';
-  if Length(AConflicts) <> 0 Then begin
-    conflicts += 'Конфликты:'#13#10;
-    conflicts += '<ol>'#13#10;
-    for i:= 0 to High(AConflicts) do
-      conflicts += '<li>'+AConflicts[i]+'</li>'#13#10;
-    conflicts += '</ol>';
-  end else
-    conflicts := 'Конфликты не обнаружены';}
+  table += #9'GridW = '+IntToStr(Length(ACells))+#13#10;
+  table += #9'GridH = '+IntToStr(curRow);
 
   content.Text := StringsReplace(content.Text,
     [dpTitle, dpTable, dpInformation, dpFilters, dpConflicts],
-    [ATitle, table, information, filters, conflicts],[rfReplaceAll]);
+    [title, table, information, filters, conflicts],[rfReplaceAll]);
   SaveStringListToFile(content, fileName, True);
   FreeAndNil(content);
 end;
@@ -123,11 +167,11 @@ begin
   content := TStringList.Create;
   content.LoadFromFile('export\htmlpattern.html');
 
-  information := '<table>'#13#10'<tr><td>По горизонтали</td><td>По вертикали</td><td>Отсортированно по</td></tr>'#13#10;
+  information := '<table>'#13#10'<tr><td>'+dpLabelH+'</td><td>'+dpLabelV+'</td><td>'+dpLabelS+'</td></tr>'#13#10;
   information += '<tr><td>'+ACaptionH+'</td><td>'+ACaptionV+'</td><td>'+ACaptionS+'</td></tr>'#13#10'</table>';
 
   if AFilterState.count <> 0 Then begin
-    filters := '<h2>Выбранные фильтры:</h2>'#13#10'<table>'#13#10;
+    filters := '<h2>'+dpLabelFilter+'</h2>'#13#10'<table>'#13#10;
     for i:= 0 to AFilterState.count-1 do begin
       filters += '  <tr><td>'+Metadata[TableId].Columns[AFilterState.field[i]].display
         +'</td><td>'+filter_captions[AFilterState.oper[i]]
@@ -154,12 +198,12 @@ begin
   table += '</table>';
 
   if Length(AConflicts) <> 0 Then begin
-    conflicts := '<h2>Конфликты:</h2>'#13#10'<table>'#13#10;
+    conflicts := '<h2>'+dpLabelConflictsFound+'</h2>'#13#10'<table>'#13#10;
     for i:= 0 to High(AConflicts) do
       conflicts += '  <tr><td>'+AConflicts[i]+'</td></tr>'#13#10;
     conflicts += '</table>';
   end else
-    conflicts := 'Конфликты не обнаружены';
+    conflicts := dpLabelConflictsNotFound;
 
   content.Text := StringsReplace(content.Text,
     [dpTitle, dpTable, dpInformation, dpFilters, dpConflicts],

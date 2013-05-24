@@ -37,6 +37,7 @@ type
       procedure RefreshColumns;
     public
       procedure RefreshSQLContent; override;
+      procedure SetFilterState(FilterState: TFilterState);
       constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
   end;
 
@@ -71,6 +72,12 @@ procedure TFormTable.RefreshSQLContent;
 begin
   SQLQuery.Open;
   RefreshColumns;
+end;
+
+procedure TFormTable.SetFilterState(FilterState: TFilterState);
+begin
+  Filter.FilterState := FilterState;
+  ButtonFilterFindClick(Nil);
 end;
 
 constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);

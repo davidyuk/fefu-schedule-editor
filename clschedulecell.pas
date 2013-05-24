@@ -32,7 +32,7 @@ type
     property Tag: integer read FTag write FTag;
     property Top: integer read FY write FY;
     property Left: integer read FX write FX;
-    procedure MouseClick(x, y: integer);
+    function MouseClick(x, y: integer):boolean;
     procedure MouseMove(x, y: integer);
     procedure Draw(ACanvas: TCanvas);
     constructor Create(TheOwner: TComponent); override;
@@ -74,6 +74,15 @@ type
     constructor Create(TheOwner: TComponent); override;
   end;
 
+  { TDrawGridCellButtonOpenTable }
+
+  TDrawGridCellButtonOpenTable = class(TDrawGridCellButton)
+  private
+    procedure Click; override;
+  public
+    constructor Create(TheOwner: TComponent); override;
+  end;
+
   TDrawGridCell = class;
 
   TShowFullCell = procedure (Cell: TDrawGridCell) of object;
@@ -99,7 +108,7 @@ type
     property PositionValue: TPoint read FPositionValue write FPositionValue;
     property Items: ArrOfCellItem read FItems write FItems;
     property Fixed: boolean read FFixed write SetFixed;
-    property Text: string read GetText; //for HTML export
+    property Text: string read GetText;
     property TextWidth: integer read FTextWidth;
     property TextHeight: integer read FTextHeight;
     property Rect: TRect read FRect;
@@ -115,7 +124,20 @@ type
 
 implementation
 
-var IconEdit, IconAdd, IconRemove, IconFull: TPortableNetworkGraphic;
+var IconEdit, IconAdd, IconRemove, IconTable, IconFull: TPortableNetworkGraphic;
+
+{ TDrawGridCellButtonOpenTable }
+
+procedure TDrawGridCellButtonOpenTable.Click;
+begin
+  TDrawGridCell(Owner).FEditCell(TDrawGridCell(Owner), maxint);
+end;
+
+constructor TDrawGridCellButtonOpenTable.Create(TheOwner: TComponent);
+begin
+  inherited Create(TheOwner);
+  FIcon := IconTable;
+end;
 
 { TDrawGridCellButtonAdd }
 
@@ -171,10 +193,12 @@ end;
 
 { TDrawGridCellButton }
 
-procedure TDrawGridCellButton.MouseClick(x, y: integer);
+function TDrawGridCellButton.MouseClick(x, y: integer):boolean;
 begin
+  Result := false;
   if not Visible Then exit;
-  if math.InRange(x, FX, FX+size) and Math.InRange(y, FY, FY+size) Then Click;
+  Result := math.InRange(x, FX, FX+size) and Math.InRange(y, FY, FY+size);
+  if Result Then Click;
 end;
 
 procedure TDrawGridCellButton.MouseMove(x, y: integer);
@@ -214,7 +238,7 @@ end;
 
 function TDrawGridCell.GetText: string;
 const item_separator = '<newitem>';
-var i, j: integer;
+var i: integer;
 begin
   Result := '';
   For i:= 0 to High(FItems) do with FItems[i] do begin
@@ -230,15 +254,16 @@ begin
   if FFixed Then exit;
   for i:= 0 to High(FButtons) do
     FButtons[i].Free;
-  setLength(FButtons, Length(FItems)*2+2);
+  setLength(FButtons, Length(FItems)*2+3);
   { TODO: i := High(FItems)*2+2; равно нулю О_О }
   FButtons[0] := TDrawGridCellButtonFull.Create(Self);
   FButtons[1] := TDrawGridCellButtonAdd.Create(Self);
+  FButtons[2] := TDrawGridCellButtonOpenTable.Create(Self);
   for i:= 0 to High(FItems) do begin
-    FButtons[i*2+2] := TDrawGridCellButtonEdit.Create(Self);
-    FButtons[i*2+2].Tag := i+1;
-    FButtons[i*2+3] := TDrawGridCellButtonRemove.Create(Self);
+    FButtons[i*2+3] := TDrawGridCellButtonEdit.Create(Self);
     FButtons[i*2+3].Tag := i+1;
+    FButtons[i*2+4] := TDrawGridCellButtonRemove.Create(Self);
+    FButtons[i*2+4].Tag := i+1;
   end;
 end;
 
@@ -282,16 +307,22 @@ begin
   FButtons[0].Top := ARect.Bottom-18;
   FButtons[0].Left := FRect.Right-18;
   FButtons[1].Top := ARect.Top+2;
-  if Length(FItems) = 0 Then FButtons[1].Left := FRect.Right-18
-  else FButtons[1].Left := FRect.Right-18*3;
+  if Length(FItems) = 0 Then
+    FButtons[1].Left := FRect.Right-18
+  else begin
+    FButtons[1].Left := FRect.Right-18*3;
+    FButtons[2].Left := FRect.Right-18*4;
+  end;
+  FButtons[2].Visible := (Length(FItems) <> 0) and ((FRect.Bottom-FButtons[2].Top)>(FButtons[2].Size*2));
+  FButtons[2].Top := ARect.Top+2;
   FButtons[1].Visible := not FButtons[0].Visible or ((FRect.Bottom-FButtons[1].Top)>(FButtons[1].Size*2));
   for i:= 0 to High(FItems) do begin
-    FButtons[i*2+2].Left := FRect.Right-18*2;
-    FButtons[i*2+2].Top := topOfItem[i]+2;
-    FButtons[i*2+2].Visible := not FButtons[0].Visible or ((FRect.Bottom-FButtons[i*2+2].Top)>(FButtons[i*2+2].Size*2));
-    FButtons[i*2+3].Left := FRect.Right-18;
+    FButtons[i*2+3].Left := FRect.Right-18*2;
     FButtons[i*2+3].Top := topOfItem[i]+2;
-    FButtons[i*2+3].Visible := not FButtons[0].Visible or ((FRect.Bottom-FButtons[i*2+3].Top)>(FButtons[i*2+3].Size*2));
+    FButtons[i*2+3].Visible := not FButtons[0].Visible or ((FRect.Bottom-FButtons[i*2+2].Top)>(FButtons[i*2+2].Size*2));
+    FButtons[i*2+4].Left := FRect.Right-18;
+    FButtons[i*2+4].Top := topOfItem[i]+2;
+    FButtons[i*2+4].Visible := not FButtons[0].Visible or ((FRect.Bottom-FButtons[i*2+3].Top)>(FButtons[i*2+3].Size*2));
   end;
   for i:= 0 to High(FButtons) do
     FButtons[i].Draw(ACanvas);
@@ -320,7 +351,7 @@ procedure TDrawGridCell.MouseClick(x, y: integer);
 var i: integer;
 begin
   for i:= 0 to High(FButtons) do
-    FButtons[i].MouseClick(x, y);
+    if FButtons[i].MouseClick(x, y) Then Break;
 end;
 
 procedure TDrawGridCell.MouseMove(x, y: integer);
@@ -343,10 +374,12 @@ initialization
   IconAdd := TPortableNetworkGraphic.Create;
   IconEdit := TPortableNetworkGraphic.Create;
   IconFull := TPortableNetworkGraphic.Create;
+  IconTable := TPortableNetworkGraphic.Create;
   IconRemove := TPortableNetworkGraphic.Create;
   IconAdd.LoadFromFile('images\add.png');
   IconEdit.LoadFromFile('images\edit.png');
   IconFull.LoadFromFile('images\full.png');
+  IconTable.LoadFromFile('images\table.png');
   IconRemove.LoadFromFile('images\remove.png');
 
 finalization
@@ -354,6 +387,7 @@ finalization
   IconAdd.Free;
   IconEdit.Free;
   IconFull.Free;
+  IconTable.Free;
   IconRemove.Free;
 
 end.

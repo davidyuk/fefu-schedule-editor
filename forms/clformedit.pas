@@ -17,21 +17,21 @@ type
     ButtonSaveClose: TButton;
     ButtonCancel: TButton;
     Datasource: TDatasource;
-    DBGrid1: TDBGrid;
     LabelError: TLabel;
     PanelButtons: TPanel;
     ScrollBox: TScrollBox;
     SQLQuery: TSQLQuery;
-    FDefaultValues: TStringList;
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonSaveCloseClick(Sender: TObject);
     procedure DatasourceDataChange(Sender: TObject; Field: TField);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormShow(Sender: TObject);
   private
+    FDefaultValues: TStringList;
     DBEdits: array of TDBEdit;
-    FEdited: Boolean;
     DBComboBoxes: array of TDBLookupComboBox;
+    FEdited: Boolean;
     procedure BuildContent;
   public
     procedure RefreshSQLContent; override;
@@ -48,8 +48,8 @@ implementation
 
 procedure TFormEdit.ButtonSaveCloseClick(Sender: TObject);
 var
-  Query: TSQLQuery;
-  DataS: TDataSource;
+  IdQuery: TSQLQuery;
+  IdDataS: TDataSource;
   f: boolean;
   i: integer;
 begin
@@ -72,31 +72,37 @@ begin
   end else
     LabelError.Visible := False;
   if RecordId = -1 Then begin
-    DataS := TDataSource.Create(Self);
-    Query := TSQLQuery.Create(Self);
-    DataS.DataSet := Query;
-    Query.Transaction := Transaction;
-    Query.SQL.Text:='SELECT GEN_ID('+Metadata[TableId].name+', 1) FROM RDB$DATABASE';
-    Query.Open;
-    Datasource.DataSet.FieldByName('id').Value:=DataS.DataSet.Fields.Fields[0].Value;
+    IdDataS := TDataSource.Create(Self);
+    IdQuery := TSQLQuery.Create(Self);
+    IdDataS.DataSet := IdQuery;
+    IdQuery.Transaction := Transaction;
+    IdQuery.SQL.Text:='SELECT GEN_ID('+Metadata[TableId].name+', 1) FROM RDB$DATABASE';
+    IdQuery.Open;
+    Datasource.DataSet.FieldByName('id').Value:=IdDataS.DataSet.Fields.Fields[0].Value;
   end; { TODO: Нужно научиться задавать ID триггером на стороне СУБД }
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
   Transaction.Commit;
-  FormContainer.RefreshSQLContent;
   Close;
+  FormContainer.RefreshSQLContent;
 end;
 
 procedure TFormEdit.DatasourceDataChange(Sender: TObject; Field: TField);
 begin
+  if Field = Nil Then Exit;
+  FDefaultValues.Values[IntToStr(Field.FieldNo-1)]:=Field.AsString;
   FEdited := true;
+end;
+
+procedure TFormEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  FreeAndNil(FDefaultValues);
 end;
 
 procedure TFormEdit.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  CanClose := (SQLQuery.State <> dsEdit) and (SQLQuery.State <> dsInsert);
-  CanClose := CanClose or not FEdited;
-  CanClose := CanClose or (MessageDlg(
+  CanClose := (SQLQuery.State <> dsEdit) and (SQLQuery.State <> dsInsert) or
+    not FEdited or (MessageDlg(
       'Подтверждение', 'Данные не сохранены. Вы действительно хотите отбросить изменения?',
       mtWarning, mbOKCancel, 0) = mrOK);
   if CanClose Then SQLQuery.Cancel;
@@ -123,9 +129,19 @@ begin
   for i:= 0 to High(DBComboBoxes) do
     DBComboBoxes[i].Parent.Free;
   SetLength(DBComboBoxes, 0);
+
+  SQLQuery.Transaction := Transaction;
+  SQLQuery.SQL.Text := GetSelectSQL(TableId, RecordId);
+  if RecordId <> -1 Then SQLQuery.UpdateSQL.Text := GetUpdateSQL(TableId, RecordId)
+  else SQLQuery.InsertSQL.Text := GetInsertSQL(TableId);
+  SQLQuery.Open;
+  if RecordId = -1 Then SQLQuery.Append
+  else SQLQuery.Edit;
+
   for i:= 0 to high(Metadata[TableId].Columns) do
-    if (RecordId = -1) and (FDefaultValues.Values[IntToStr(i)] <> '') Then
+    if (RecordId = -1) and (FDefaultValues.Values[IntToStr(i)] <> '') Then begin
         Datasource.DataSet.Fields.Fields[i].AsString := FDefaultValues.Values[IntToStr(i)];
+    end;
   for i:= high(Metadata[TableId].Columns) downto 0 do begin
     if (RecordId = -1) and (Metadata[TableId].Columns[i].name = 'id') Then continue;
     Panel := TPanel.Create(Self);
@@ -174,13 +190,11 @@ begin
     end;
   end;
   FEdited := False;
-  FreeAndNil(FDefaultValues);
 end;
 
 procedure TFormEdit.RefreshSQLContent;
 begin
-  //BuildContent;
-  { TODO : Нужно только обновить TDBLookupComboBox'ы (беда) }
+  BuildContent;
 end;
 
 procedure TFormEdit.SetDefaultValue(ColumnId: Integer; Value: String);
@@ -194,13 +208,6 @@ begin
   FDefaultValues := TStringList.Create;
   FTableId := ABookId;
   FRecordId := ARecordId;
-  SQLQuery.Transaction := Transaction;
-  SQLQuery.SQL.Text := GetSelectSQL(TableId, RecordId);
-  if RecordId <> -1 Then SQLQuery.UpdateSQL.Text := GetUpdateSQL(TableId, RecordId)
-  else SQLQuery.InsertSQL.Text := GetInsertSQL(TableId);
-  SQLQuery.Open;
-  if RecordId = -1 Then SQLQuery.Append
-  else SQLQuery.Edit;
 end;
 
 procedure TFormEdit.ButtonCancelClick(Sender: TObject);

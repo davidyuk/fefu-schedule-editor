@@ -60,7 +60,7 @@ procedure TFormContainer.Clear;
 var i: integer;
 begin
   for i:= 0 to high(Forms) do begin
-    Forms[i].Free;
+    Forms[i].Close;
   end;
   setlength(Forms, 0);
 end;

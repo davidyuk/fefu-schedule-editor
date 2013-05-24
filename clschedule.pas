@@ -34,7 +34,6 @@ procedure ReBuildGridContent(TheOwner: TComponent; var Cells: ArrOfArrOfDrawGrid
     FDatasource := TDataSource.Create(nil);
     FDatasource.DataSet := FSQLQuery;
     FSQLQuery.Transaction := Transaction;
-    { TODO: Нужно узнать есть или нет это в фильтре }
     FSQLQuery.SQL.Text := 'SELECT id, name FROM '+Metadata[TableId].Columns[Field].referenceTable;
     if Length(arr) <> 0 Then begin
       FSQLQuery.SQL.Text := FSQLQuery.SQL.Text+' '+s;
@@ -51,7 +50,7 @@ procedure ReBuildGridContent(TheOwner: TComponent; var Cells: ArrOfArrOfDrawGrid
     FreeAndNil(FDatasource);
     FreeAndNil(FSQLQuery);
   end;
-  procedure RemoveEmpty(col: boolean); { TODO: В этой функции ошибка: неправильно изменяется размер массива }
+  procedure RemoveEmpty(col: boolean);
   var
     i, j, k, c, r: integer;
     f: boolean;
