@@ -5,8 +5,7 @@ unit CLFormChild;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, DBGrids,
-  ExtCtrls, StdCtrls, sqldb, db, strutils;
+  Forms;
 
 type
 
@@ -19,11 +18,10 @@ type
     property TableId: integer read FTableId;
     property RecordId: integer read FRecordId;
     procedure RefreshSQLContent; virtual; abstract;
+    procedure BeforeRefreshSQLContent; virtual; abstract;
   end;
 
 implementation
-
-{ TFormChild }
 
 end.
 

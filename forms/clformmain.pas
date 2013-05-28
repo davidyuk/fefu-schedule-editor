@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, ExtCtrls, ComCtrls, StdCtrls,
-  Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, CLFormSchedule,
+  Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, CLFormOLAP,
   Graphics;
 
 type
@@ -146,10 +146,10 @@ begin
 end;
 
 procedure TFormMain.ButtonShowFormScheduleClick(Sender: TObject);
-var FormSchedule: TFormSchedule;
+var FormOLAP: TFormOLAP;
 begin
-  FormSchedule := TFormSchedule.Create(Application);
-  FormContainer.AddForm(FormSchedule);
+  FormOLAP := TFormOLAP.Create(Application);
+  FormContainer.AddForm(FormOLAP);
 end;
 
 procedure TFormMain.FormTableActive(Sender: TObject);

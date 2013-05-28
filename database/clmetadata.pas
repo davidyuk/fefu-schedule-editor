@@ -28,7 +28,7 @@ type
   TMetadata = class
   private const
     DBValueInXML: array [0..1] of string = ('int', 'str');
-    FileName = 'database\metadata.xml';
+    FileName = './database/metadata.xml';
   private
     FTables: array of TTable;
     FTitle: String;
@@ -49,8 +49,9 @@ type
   function GetSelectSQL(TableId, RecordId: integer): string;
   function GetUpdateSQL(TableId, RecordId: integer): string;
   function GetInsertSQL(TableId: integer): string;
-  function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2: integer): string;
-  function GetOrderBySQL(TableId: integer; RecordId: integer): string;
+  function GetJoinedSQL(TableId: integer): string;
+  function GetOrderBySQL(TableId: integer; FieldsIds: array of integer;
+    ReferenceTableFields: array of string): string;
 
 var
   Metadata: TMetadata;
@@ -87,37 +88,40 @@ begin
     +') VALUES ('+FieldListStr(':%s', TableId)+')';
 end;
 
-function GetJoinedSQL(TableId: integer; outRecordId1, outRecordId2: integer
-  ): string;
+function GetJoinedSQL(TableId: integer): string;
 var InnerJoin: string; i: integer;
 begin
   Result := '';
   InnerJoin := '';
   with Metadata[TableId] do begin
     for i:= 0 to High(Columns) do begin
-      if i <> 0 Then begin Result += ', '; InnerJoin += #13#10; end;
-      if (Columns[i].referenceTable = '') or (i = outRecordId1) or (i = outRecordId2) Then begin
-        Result += name+'.'+Columns[i].name;
-      end else begin
+      if i <> 0 Then Result += ', ';
+      if Columns[i].referenceTable = '' Then
+        Result += name+'.'+Columns[i].name
+      else begin
         Result += Columns[i].referenceTable+'.name';
-        InnerJoin+='INNER JOIN '+Columns[i].referenceTable+' ON '+name+'.'+Columns[i].name
-          +' = '+Columns[i].referenceTable+'.id';
+        InnerJoin += Format(#13#10'INNER JOIN %s ON %s.%s = %s.id',
+          [Columns[i].referenceTable, name, Columns[i].name, Columns[i].referenceTable]);
       end;
     end;
     Result := 'SELECT '+Result+' FROM '+name+InnerJoin;
   end;
 end;
 
-function GetOrderBySQL(TableId: integer; RecordId: integer): string;
+function GetOrderBySQL(TableId: integer; FieldsIds: array of integer;
+  ReferenceTableFields: array of string): string;
+var i: integer;
 begin
   Result := '';
-  with Metadata[TableId] do begin
-    if RecordId <> -1 Then begin
-      If Columns[RecordId].referenceTable = '' Then Result:= 'id'
-      else Result:= Columns[RecordId].referenceTable+'.id';
+  with Metadata[TableId] do
+    if length(FieldsIds) <> 0 Then begin
+      for i:= 0 to High(FieldsIds) do begin
+        if i <> 0 Then Result += ', ';
+        If Columns[FieldsIds[i]].referenceTable = '' Then Result+= 'id'
+        else Result+= Columns[FieldsIds[i]].referenceTable+'.'+ReferenceTableFields[i];
+      end;
       Result := 'ORDER BY '+Result;
     end;
-  end;
 end;
 
 { TMetadata }
@@ -248,4 +252,4 @@ finalization
   Metadata.Free;
 
 end.
-
+

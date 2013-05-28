@@ -38,16 +38,16 @@ With objExcel.Range(C(1, 1, GridW, GridH))
 	.Columns.AutoFit
 End With
 With objExcel.Range(C(2, 2, GridW, GridH))
-	.Borders.Color = RGB(0, 0, 0)
+	.Borders.Color = RGB(192, 192, 192)
 End With
 With objExcel.Range(C(1, 1, 1, GridH))
-	.Interior.Color = RGB(238, 238, 238)
-	.Borders.Color = RGB(255, 255, 255)
+	.Interior.Color = RGB(240, 240, 240)
+	.Borders.Color = RGB(105, 105, 105)
     .Borders.LineStyle = xlContinuous
 End With 
 With objExcel.Range(C(1, 1, GridW, 1))
-	.Interior.Color = RGB(238, 238, 238)
-	.Borders.Color = RGB(255, 255, 255)
+	.Interior.Color = RGB(240, 240, 240)
+	.Borders.Color = RGB(105, 105, 105)
     .Borders.LineStyle = xlContinuous
 End With
 

@@ -19,6 +19,7 @@ type
     public
       procedure AddForm(FormChild: TFormChild);
       procedure RefreshSQLContent;
+      procedure BeforeRefreshSQLContent;
       procedure Clear;
   end;
 
@@ -54,6 +55,13 @@ var i: integer;
 begin
   for i:= 0 to High(Forms) do
     Forms[i].RefreshSQLContent;
+end;
+
+procedure TFormContainer.BeforeRefreshSQLContent;
+var i: integer;
+begin
+  for i:= 0 to High(Forms) do
+    Forms[i].BeforeRefreshSQLContent;
 end;
 
 procedure TFormContainer.Clear;

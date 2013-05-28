@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, DbCtrls,
   ExtCtrls, StdCtrls, CLFormChild, sqldb, db, CLDatabase, CLMetadata,
-  CLFormContainer, Graphics, DBGrids;
+  CLFormContainer, Graphics, Buttons;
 
 type
 
@@ -24,19 +24,22 @@ type
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonSaveCloseClick(Sender: TObject);
     procedure DatasourceDataChange(Sender: TObject; Field: TField);
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure FormShow(Sender: TObject);
   private
-    FDefaultValues: TStringList;
+    FDefaultValues, FValues: TStringList;
     DBEdits: array of TDBEdit;
     DBComboBoxes: array of TDBLookupComboBox;
-    FEdited: Boolean;
+    FLockDefaultValues, FEdited: Boolean;
     procedure BuildContent;
+    procedure UnLockField(Sender: TObject);
   public
+    procedure LockDefaultValues;
     procedure RefreshSQLContent; override;
+    procedure BeforeRefreshSQLContent; override;
     procedure SetDefaultValue(ColumnId: Integer; Value: String);
     constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -48,8 +51,8 @@ implementation
 
 procedure TFormEdit.ButtonSaveCloseClick(Sender: TObject);
 var
-  IdQuery: TSQLQuery;
-  IdDataS: TDataSource;
+  {IdQuery: TSQLQuery;
+  IdDataS: TDataSource;}
   f: boolean;
   i: integer;
 begin
@@ -71,7 +74,7 @@ begin
     exit;
   end else
     LabelError.Visible := False;
-  if RecordId = -1 Then begin
+  {if RecordId = -1 Then begin
     IdDataS := TDataSource.Create(Self);
     IdQuery := TSQLQuery.Create(Self);
     IdDataS.DataSet := IdQuery;
@@ -79,30 +82,24 @@ begin
     IdQuery.SQL.Text:='SELECT GEN_ID('+Metadata[TableId].name+', 1) FROM RDB$DATABASE';
     IdQuery.Open;
     Datasource.DataSet.FieldByName('id').Value:=IdDataS.DataSet.Fields.Fields[0].Value;
-  end; { TODO: Нужно научиться задавать ID триггером на стороне СУБД }
+  end;}
+  { TODO: Проверить задаётся или нет автоматически ID }
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
-  Transaction.Commit;
   Close;
+  FormContainer.BeforeRefreshSQLContent;
+  Transaction.Commit;
   FormContainer.RefreshSQLContent;
 end;
 
 procedure TFormEdit.DatasourceDataChange(Sender: TObject; Field: TField);
 begin
-  if Field = Nil Then Exit;
-  FDefaultValues.Values[IntToStr(Field.FieldNo-1)]:=Field.AsString;
-  FEdited := true;
-end;
-
-procedure TFormEdit.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-  FreeAndNil(FDefaultValues);
+  FEdited:= true;
 end;
 
 procedure TFormEdit.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
-  CanClose := (SQLQuery.State <> dsEdit) and (SQLQuery.State <> dsInsert) or
-    not FEdited or (MessageDlg(
+  CanClose := not(SQLQuery.State in dsEditModes) or not FEdited or (MessageDlg(
       'Подтверждение', 'Данные не сохранены. Вы действительно хотите отбросить изменения?',
       mtWarning, mbOKCancel, 0) = mrOK);
   if CanClose Then SQLQuery.Cancel;
@@ -118,10 +115,12 @@ var
   i: integer;
   Panel: TPanel;
   DBEdit: TDBEdit;
+  Button: TSpeedButton;
   Labell: TLabel;
   DBComboBox: TDBLookupComboBox;
   Query: TSQLQuery;
   DataS: TDataSource;
+  Lock: Boolean;
 begin
   for i:= 0 to High(DBEdits) do
     DBEdits[i].Parent.Free;
@@ -137,24 +136,29 @@ begin
   SQLQuery.Open;
   if RecordId = -1 Then SQLQuery.Append
   else SQLQuery.Edit;
+  Datasource.DataSet.FieldByName('id').Required := false;
 
   for i:= 0 to high(Metadata[TableId].Columns) do
-    if (RecordId = -1) and (FDefaultValues.Values[IntToStr(i)] <> '') Then begin
-        Datasource.DataSet.Fields.Fields[i].AsString := FDefaultValues.Values[IntToStr(i)];
-    end;
+    if FDefaultValues.Values[IntToStr(i)] <> '' Then
+      Datasource.DataSet.Fields.Fields[i].AsString := FValues.Values[IntToStr(i)];
   for i:= high(Metadata[TableId].Columns) downto 0 do begin
     if (RecordId = -1) and (Metadata[TableId].Columns[i].name = 'id') Then continue;
+    Lock := false;
+    if FDefaultValues.Values[IntToStr(i)] <> '' Then begin
+      Lock := (FValues.Values[IntToStr(i)]='')or(FDefaultValues.Values[IntToStr(i)]=FValues.Values[IntToStr(i)]);
+      if Lock Then Datasource.DataSet.Fields.Fields[i].AsString := FDefaultValues.Values[IntToStr(i)];
+    end;
     Panel := TPanel.Create(Self);
     Panel.Parent := ScrollBox;
     Panel.Align := alTop;
     Panel.BorderStyle:= bsNone;
     Panel.BorderWidth:= 0;
-    Panel.Height:= 29;
+    Panel.AutoSize := true;
     Labell := TLabel.Create(Panel);
     Labell.Caption:= Metadata[TableId].Columns[i].display;
     Labell.Align:= alLeft;
     Labell.Parent := Panel;
-    Labell.BorderSpacing.Around:=6;
+    Labell.BorderSpacing.Around:=5;
     Labell.AutoSize:=false;
     Labell.Width:= 150;
     if Metadata[TableId].Columns[i].referenceTable = '' Then begin
@@ -164,8 +168,8 @@ begin
       DBEdit.BorderSpacing.Around:=1;
       DBEdit.DataSource := Datasource;
       DBEdit.DataField := Metadata[TableId].Columns[i].name;
-      If DBEdit.DataField = 'id' Then DBEdit.Enabled := false;
-      DBEdit.Tag:= IntPtr(Labell);
+      If (DBEdit.DataField = 'id') or Lock Then DBEdit.Enabled := false;
+      DBEdit.Tag:= PtrInt(Labell);
       SetLength(DBEdits, length(DBEdits)+1);
       DBEdits[High(DBEdits)] := DBEdit;
     end else begin
@@ -184,17 +188,50 @@ begin
       DBComboBox.ListSource := DataS;
       DBComboBox.ListField := 'NAME';
       DBComboBox.KeyField := 'ID';
-      DBComboBox.Tag:= IntPtr(Labell);
+      DBComboBox.Tag:= PtrInt(Labell);
       SetLength(DBComboBoxes, Length(DBComboBoxes)+1);
       DBComboBoxes[High(DBComboBoxes)]:= DBComboBox;
     end;
+    If Lock Then begin
+      DBComboBox.Enabled := false;
+      Button := TSpeedButton.Create(Self);
+      Button.Align := alRight;
+      Button.BorderSpacing.Around := 1;
+      Button.Caption := 'Разб.';
+      Button.Tag := PtrInt(DBComboBox);
+      Button.OnClick := @UnLockField;
+      Button.Parent := Panel;
+      Button.AutoSize := true;
+      {Button.Flat := true;
+      Button.Transparent := false;
+      Button.Color := clBtnFace;}
+    end;
   end;
-  FEdited := False;
+  FEdited:= false;
+end;
+
+procedure TFormEdit.UnLockField(Sender: TObject);
+begin
+  TControl(TComponent(Sender).Tag).Enabled := true;
+  TControl(Sender).Visible := false;
+end;
+
+procedure TFormEdit.LockDefaultValues;
+begin
+  FLockDefaultValues:= true;
 end;
 
 procedure TFormEdit.RefreshSQLContent;
 begin
   BuildContent;
+end;
+
+procedure TFormEdit.BeforeRefreshSQLContent;
+var i: integer;
+begin
+  with Datasource.DataSet do
+    for i:= 0 to FieldCount-1 do
+      FValues.Values[IntToStr(i)]:= Fields.Fields[i].AsString;
 end;
 
 procedure TFormEdit.SetDefaultValue(ColumnId: Integer; Value: String);
@@ -206,8 +243,16 @@ constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
 begin
   inherited Create(TheOwner);
   FDefaultValues := TStringList.Create;
+  FValues := TStringList.Create;
   FTableId := ABookId;
   FRecordId := ARecordId;
+end;
+
+destructor TFormEdit.Destroy;
+begin
+  inherited Destroy;
+  FDefaultValues.Free;
+  FValues.Free;
 end;
 
 procedure TFormEdit.ButtonCancelClick(Sender: TObject);

@@ -28,20 +28,24 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
+        <LaunchingApplication PathPlusParams="\usr\bin\xterm -T 'Lazarus Run Output' -e $(LazarusDir)\tools\runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="3">
+    <RequiredPackages Count="4">
       <Item1>
-        <PackageName Value="FCL"/>
+        <PackageName Value="RunTimeTypeInfoControls"/>
       </Item1>
       <Item2>
-        <PackageName Value="SQLDBLaz"/>
+        <PackageName Value="FCL"/>
       </Item2>
       <Item3>
-        <PackageName Value="LCL"/>
+        <PackageName Value="SQLDBLaz"/>
       </Item3>
+      <Item4>
+        <PackageName Value="LCL"/>
+      </Item4>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="18">
       <Unit0>
         <Filename Value="DBClient.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -77,51 +81,79 @@
         <UnitName Value="CLFormChild"/>
       </Unit4>
       <Unit5>
-        <Filename Value="cldatabase.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLDatabase"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="clmetadata.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLMetadata"/>
-      </Unit6>
-      <Unit7>
         <Filename Value="forms\clformedit.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormEdit"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="CLFormEdit"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="clfilter.pas"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="filter\clfilter.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLFilter"/>
-      </Unit8>
-      <Unit9>
-        <Filename Value="forms\clformschedule.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="FormSchedule"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-        <UnitName Value="CLFormSchedule"/>
-      </Unit9>
-      <Unit10>
-        <Filename Value="clschedulecell.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLScheduleCell"/>
-      </Unit10>
-      <Unit11>
-        <Filename Value="clschedule.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="CLSchedule"/>
-      </Unit11>
-      <Unit12>
+      </Unit6>
+      <Unit7>
         <Filename Value="export\clexport.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CLExport"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="forms\clformolap.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormOLAP"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="CLFormOLAP"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="olap\clolapgrid.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="OLAPGrid"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="CLOLAPGrid"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="database\clmetadata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLMetadata"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="database\cldatabase.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLDatabase"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="olap\clolapcell.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLOLAPCell"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="olap\clolapcellbutton.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLOLAPCellButton"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="olap\clolapcellbuttons.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLOLAPCellButtons"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="olap\clolaptypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLOLAPTypes"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="filter\clfilterpanel.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLFilterPanel"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="filter\clfiltertypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CLFilterTypes"/>
+      </Unit17>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -132,7 +164,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="forms;export"/>
+      <OtherUnitFiles Value="forms;export;database;olap;filter"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

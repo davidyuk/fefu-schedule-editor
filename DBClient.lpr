@@ -7,8 +7,10 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, CLFormMain, CLFormTable, CLFormContainer, CLFormChild, CLDatabase,
-  CLMetadata, CLFormEdit, CLFilter, clschedulecell, CLSchedule, CLExport;
+  Forms, runtimetypeinfocontrols, CLFormMain, CLFormTable, CLFormContainer,
+  CLFormChild, CLFormEdit, CLFilter, CLOLAPGrid, CLOLAPCell, clmetadata,
+  cldatabase, CLExport, CLFormOLAP, CLOLAPCellButton, CLOLAPCellButtons, 
+CLOLAPTypes, CLFilterPanel, CLFilterTypes;
 
 {$R *.res}
 

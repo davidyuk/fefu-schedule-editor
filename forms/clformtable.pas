@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, Controls, Forms, DBGrids, sysutils,
-  ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter,
+  ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter, CLFilterTypes,
   CLDatabase, CLMetadata, CLFormChild, CLFormEdit, CLFormContainer;
 
 type
@@ -14,9 +14,6 @@ type
   { TFormTable }
 
   TFormTable = class(TFormChild)
-      ButtonFilterAdd: TButton;
-    ButtonFilterCancel: TButton;
-    ButtonFilterFind: TButton;
     ButtonAdd: TButton;
     ButtonEdit: TButton;
     ButtonRemove: TButton;
@@ -26,19 +23,18 @@ type
     SQLQuery: TSQLQuery;
     procedure ButtonAddClick(Sender: TObject);
     procedure ButtonEditClick(Sender: TObject);
-    procedure ButtonFilterCancelClick(Sender: TObject);
-    procedure ButtonFilterFindClick(Sender: TObject);
     procedure ButtonRemoveClick(Sender: TObject);
     procedure DBGridColumnSized(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure ButtonFilterAddClick(Sender: TObject);
-    private
-      Filter: TFilter;
-      procedure RefreshColumns;
-    public
-      procedure RefreshSQLContent; override;
-      procedure SetFilterState(FilterState: TFilterState);
-      constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
+  private
+    Filter: TFilter;
+    procedure RefreshColumns;
+    procedure FilterApply;
+  public
+    procedure RefreshSQLContent; override;
+    procedure BeforeRefreshSQLContent; override;
+    procedure SetFilterState(FilterState: TFilterState);
+    constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
   end;
 
 implementation
@@ -52,11 +48,6 @@ var Form: TFormEdit;
 begin
   Form := TFormEdit.Create(Application, TableId, -1);
   FormContainer.AddForm(Form);
-end;
-
-procedure TFormTable.ButtonFilterAddClick(Sender: TObject);
-begin
-  Filter.AddPanel;
 end;
 
 procedure TFormTable.RefreshColumns;
@@ -74,10 +65,14 @@ begin
   RefreshColumns;
 end;
 
+procedure TFormTable.BeforeRefreshSQLContent;
+begin
+
+end;
+
 procedure TFormTable.SetFilterState(FilterState: TFilterState);
 begin
-  Filter.FilterState := FilterState;
-  ButtonFilterFindClick(Nil);
+  Filter.SetPanelsState(FilterState, True);
 end;
 
 constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
@@ -90,7 +85,7 @@ begin
   SQLQuery.Transaction := Transaction;
   Datasource.Enabled := True;
   Caption:= Metadata[TableId].display;
-  Filter := TFilter.Create(Self, Metadata[TableId], Self);
+  Filter := TFilter.Create(Self, TableId, Self, @FilterApply);
 end;
 
 procedure TFormTable.ButtonEditClick(Sender: TObject);
@@ -100,36 +95,22 @@ begin
   FormContainer.AddForm(Form);
 end;
 
-procedure TFormTable.ButtonFilterCancelClick(Sender: TObject);
-begin
-  SQLQuery.Close;
-  SQLQuery.SQL.Text:=GetJoinedSQL(TableId, -1, -1);
-  SQLQuery.Open;
-  if Sender <> Nil Then TButton(Sender).Visible:=false;
-  RefreshColumns;
-end;
-
-procedure TFormTable.ButtonFilterFindClick(Sender: TObject);
+procedure TFormTable.FilterApply;
 var
   i: integer;
   s: string;
   sArr: array of string;
 begin
-  s:=GetJoinedSQL(TableId, -1, -1)+' '+Filter.GetWhereSQL(sArr);
-  if Length(sArr) = 0 Then begin
-    ButtonFilterCancelClick(Nil);
-    ButtonFilterCancel.Visible := false;
-    exit;
-  end;
   SQLQuery.Close;
-  SQLQuery.SQL.Text := s;
-  for i:= 0 to High(sArr) do
-    SQLQuery.ParamByName('P'+intToStr(i)).AsString:= sArr[i];
+  SQLQuery.SQL.Text := GetJoinedSQL(TableId);
+  if Filter.Applyed Then begin
+    SQLQuery.SQL.Text:=SQLQuery.SQL.Text+' '+Filter.GetWhereSQL(sArr);
+    for i:= 0 to High(sArr) do
+      SQLQuery.ParamByName('P'+intToStr(i)).AsString:= sArr[i];
+  end;
   SQLQuery.Open;
-  ButtonFilterCancel.Visible:=true;
   RefreshColumns;
 end;
-
 
 procedure TFormTable.ButtonRemoveClick(Sender: TObject);
 var
@@ -149,7 +130,9 @@ begin
     SQLQueryL.Transaction := Transaction;
     SQLQueryL.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+id;
     SQLQueryL.ExecSQL;
+    FormContainer.BeforeRefreshSQLContent;
     Transaction.Commit;
+    FormContainer.RefreshSQLContent;
     SQLQueryL.Free;
     SQLQuery.Open;
     RefreshColumns;
@@ -169,7 +152,7 @@ end;
 
 procedure TFormTable.FormShow(Sender: TObject);
 begin
-  ButtonFilterCancelClick(Nil);
+  FilterApply;
 end;
 
 end.

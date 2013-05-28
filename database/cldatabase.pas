@@ -22,7 +22,7 @@ initialization
   //без этой строки русские буквы не отображаются в Grid
   Connection.UserName := 'sysdba';
   Connection.Password := 'masterkey';
-  Connection.DatabaseName := 'database\database.fdb';
+  Connection.DatabaseName := './database/database.fdb';
 
 finalization
 
@@ -31,4 +31,4 @@ finalization
   Connection.Free;
 
 end.
-
+

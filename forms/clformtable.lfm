@@ -1,7 +1,7 @@
 inherited FormTable: TFormTable
-  Left = 254
+  Left = 114
   Height = 244
-  Top = 201
+  Top = 325
   Width = 580
   Caption = 'Таблица'
   ClientHeight = 244
@@ -66,40 +66,6 @@ inherited FormTable: TFormTable
       Caption = 'Удалить'
       OnClick = ButtonRemoveClick
       TabOrder = 2
-    end
-    object ButtonFilterFind: TButton
-      Left = 504
-      Height = 30
-      Top = 1
-      Width = 75
-      Align = alRight
-      BorderSpacing.Around = 1
-      Caption = 'Фильтр'
-      OnClick = ButtonFilterFindClick
-      TabOrder = 3
-    end
-    object ButtonFilterCancel: TButton
-      Left = 435
-      Height = 30
-      Top = 1
-      Width = 68
-      Align = alRight
-      BorderSpacing.Around = 1
-      Caption = 'Отменить'
-      OnClick = ButtonFilterCancelClick
-      TabOrder = 4
-      Visible = False
-    end
-    object ButtonFilterAdd: TButton
-      Left = 404
-      Height = 30
-      Top = 1
-      Width = 30
-      Align = alRight
-      BorderSpacing.Around = 1
-      Caption = '+'
-      OnClick = ButtonFilterAddClick
-      TabOrder = 5
     end
   end
   object Datasource: TDatasource[2]
