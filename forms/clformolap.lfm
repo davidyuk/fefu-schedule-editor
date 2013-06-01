@@ -214,8 +214,13 @@ inherited FormOLAP: TFormOLAP
       TabOrder = 0
       OnClick = DrawGridClick
       OnDblClick = DrawGridDblClick
+      OnDragDrop = DrawGridDragDrop
+      OnDragOver = DrawGridDragOver
       OnDrawCell = DrawGridDrawCell
+      OnEndDrag = DrawGridEndDrag
+      OnMouseDown = DrawGridMouseDown
       OnMouseMove = DrawGridMouseMove
+      OnStartDrag = DrawGridStartDrag
     end
     object PanelHint: TPanel
       Left = 168
@@ -237,9 +242,11 @@ inherited FormOLAP: TFormOLAP
         Align = alClient
         BorderSpacing.Around = 1
         OnClick = PaintBoxClick
+        OnMouseDown = PaintBoxMouseDown
         OnMouseMove = PaintBoxMouseMove
         OnMouseLeave = PaintBoxMouseLeave
         OnPaint = PaintBoxPaint
+        OnStartDrag = PaintBoxStartDrag
       end
     end
   end

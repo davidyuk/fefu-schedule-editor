@@ -10,7 +10,7 @@ uses
   Forms, runtimetypeinfocontrols, CLFormMain, CLFormTable, CLFormContainer,
   CLFormChild, CLFormEdit, CLFilter, CLOLAPGrid, CLOLAPCell, clmetadata,
   cldatabase, CLExport, CLFormOLAP, CLOLAPCellButton, CLOLAPCellButtons, 
-CLOLAPTypes, CLFilterPanel, CLFilterTypes;
+CLOLAPTypes, CLConflicts, CLFormConflicts;
 
 {$R *.res}
 

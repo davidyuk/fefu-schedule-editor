@@ -5,8 +5,8 @@ unit CLExport;
 interface
 
 uses
-  Classes, SysUtils, Dialogs, strutils, CLOLAPCell, math, CLFilter, CLFilterTypes,
-  CLMetadata;
+  Classes, SysUtils, Dialogs, strutils, CLOLAPCell, math, CLFilter,
+  CLMetadata, LazUTF8;
 
 procedure ExportToExcelVBS(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
   TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells;
@@ -37,10 +37,10 @@ begin
     if Not Ansi Then
       StringList.SaveToFile(Utf8ToAnsi(FileName))
     else begin
-      s := UTF8Decode(StringList.Text);
+      s := Utf8ToAnsi(StringList.Text);
       assign(output, Utf8ToAnsi(FileName));
       Rewrite(output);
-      WriteLn(Copy(s, 2, Length(s))); { TODO: Разобраться с кодировками }
+      WriteLn(s);
       Close(output);
     end;
   except

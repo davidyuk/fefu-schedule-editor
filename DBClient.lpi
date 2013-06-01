@@ -145,14 +145,17 @@
         <UnitName Value="CLOLAPTypes"/>
       </Unit15>
       <Unit16>
-        <Filename Value="filter\clfilterpanel.pas"/>
+        <Filename Value="conflicts\clconflicts.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CLFilterPanel"/>
+        <UnitName Value="CLConflicts"/>
       </Unit16>
       <Unit17>
-        <Filename Value="filter\clfiltertypes.pas"/>
+        <Filename Value="forms\clformconflicts.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CLFilterTypes"/>
+        <ComponentName Value="FormConflicts"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="CLFormConflicts"/>
       </Unit17>
     </Units>
   </ProjectOptions>
@@ -164,7 +167,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="forms;export;database;olap;filter"/>
+      <OtherUnitFiles Value="forms;export;database;olap;filter;conflicts"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

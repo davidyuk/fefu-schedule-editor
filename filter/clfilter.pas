@@ -5,14 +5,51 @@ unit CLFilter;
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, StdCtrls, Controls, CLMetadata, CLFilterPanel,
-  CLFilterTypes;
+  Classes, SysUtils, ExtCtrls, StdCtrls, Buttons, Controls, CLMetadata;
+
+const
+  filter_maxcount = 20;
+  filter_operators: array[0..6] of string =
+    ('< %s', '<= %s', '= %s', '>= %s', '> %s', 'LIKE %s', 'LIKE %s');
+  filter_contentleft: array[0..6] of string =
+    ('',     '',      '',     '',      '',     '',        '%');
+  filter_contentright: array[0..6] of string =
+    ('',     '',      '',     '',      '',     '%',       '%');
+  filter_captions: array[0..6] of string =
+    ('Меньше', 'Меньше или равно', 'Равно', 'Больше или равно', 'Больше', 'Начинается с', 'Содержит');
 
 type
+
+  TFilterState = Record
+    count: integer;
+    field: array [0..filter_maxcount-1] of integer;
+    oper: array [0..filter_maxcount-1] of integer;
+    content: array [0..filter_maxcount-1] of string;
+  end;
 
   TFilterCallBack = procedure of object;
 
   ArrOfStr = array of string;
+
+  { TFilterPanel }
+
+  TFilterPanel = Class(TCustomPanel)
+  private
+    ComboBoxF, ComboBoxO: TComboBox;
+    Edit: TEdit;
+    Remove: TSpeedButton;
+    function GetContent: String;
+    function GetField: Integer;
+    function GetOperation: Integer;
+    procedure SetContent(AValue: String);
+    procedure SetField(AValue: Integer);
+    procedure SetOperation(AValue: Integer);
+  public
+    property Field: Integer read GetField write SetField;
+    property Operation: Integer read GetOperation write SetOperation;
+    property Content: String read GetContent write SetContent;
+    constructor Create(TheOwner: TComponent; Columns: array of TColumn; ButtonRemoveClick: TNotifyEvent); virtual;
+  end;
 
   { TFilter }
 
@@ -57,7 +94,7 @@ procedure TFilter.ApplyFilter(Sender: TObject);
 begin
   FFilterState := GetPanelsState;
   if FilterState.count <> 0 Then begin
-    FButtonCancel.Visible := true;
+    FButtonCancel.Enabled := true;
     FApplyed := true;
   end else
     FApplyed := false;
@@ -66,7 +103,7 @@ end;
 
 procedure TFilter.CancelFilter(Sender: TObject);
 begin
-  FButtonCancel.Visible := false;
+  FButtonCancel.Enabled := false;
   FApplyed := false;
   FOnApply;
 end;
@@ -146,18 +183,20 @@ begin
   FTableId := TableId;
   FParent := AParent;
   FOnApply := OnApply;
+
   Panel := TPanel.Create(Self);
-  Panel.Parent := FParent;
   Panel.BevelOuter:=bvNone;
   Panel.Align:=alTop;
   Panel.AutoSize := True;
+
   Button := TButton.Create(Self);
-  Button.Caption := 'Добавить панель';
+  Button.Caption := 'Добавить условие';
   Button.AutoSize := true;
   Button.BorderSpacing.Around := 3;
   Button.Parent := Panel;
   Button.Align := alRight;
   Button.OnClick := @AddPanel;
+
   FButtonApply := TButton.Create(Self);
   FButtonApply.Caption := 'Применить фильтр';
   FButtonApply.AutoSize := true;
@@ -165,15 +204,91 @@ begin
   FButtonApply.Parent := Panel;
   FButtonApply.Align := alRight;
   FButtonApply.OnClick := @ApplyFilter;
+
   FButtonCancel := TButton.Create(Self);
-  FButtonCancel.Visible := false;
   FButtonCancel.Caption := 'Отменить фильтр';
   FButtonCancel.AutoSize := true;
   FButtonCancel.BorderSpacing.Around := 3;
   FButtonCancel.Parent := Panel;
   FButtonCancel.Align := alRight;
   FButtonCancel.OnClick := @CancelFilter;
-  FButtonCancel.Visible := false;
+  FButtonCancel.Enabled := false;
+
+  Panel.Parent := FParent;
+end;
+
+{ TFilterPanel }
+
+function TFilterPanel.GetContent: String;
+begin
+  result:= Edit.Text;
+end;
+
+function TFilterPanel.GetField: Integer;
+begin
+  result:= ComboBoxF.ItemIndex;
+end;
+
+function TFilterPanel.GetOperation: Integer;
+begin
+  Result := ComboBoxO.ItemIndex;
+end;
+
+procedure TFilterPanel.SetContent(AValue: String);
+begin
+  Edit.Text := AValue;
+end;
+
+procedure TFilterPanel.SetField(AValue: Integer);
+begin
+  ComboBoxF.ItemIndex := AValue;
+end;
+
+procedure TFilterPanel.SetOperation(AValue: Integer);
+begin
+  ComboBoxO.ItemIndex := AValue;
+end;
+
+constructor TFilterPanel.Create(TheOwner: TComponent;
+  Columns: array of TColumn; ButtonRemoveClick: TNotifyEvent);
+var i: integer;
+begin
+  inherited Create(TheOwner);
+  BevelOuter:=bvNone;
+  Align:=alTop;
+  AutoSize := True;
+
+  ComboBoxO := TComboBox.Create(Self);
+  ComboBoxO.Parent := Self;
+  ComboBoxO.Align:=alLeft;
+  ComboBoxO.Width := 120;
+  ComboBoxO.ReadOnly:=True;
+  ComboBoxO.BorderSpacing.Around := 3;
+  for i:= 0 to high(filter_captions) do
+    ComboBoxO.Items.Add(filter_captions[i]);
+
+  ComboBoxF := TComboBox.Create(Self);
+  ComboBoxF.Parent := Self;
+  ComboBoxF.Align:=alLeft;
+  ComboBoxF.ReadOnly:=True;
+  ComboBoxF.BorderSpacing.Around := 3;
+  ComboBoxF.Width := 120;
+  for i:= 0 to high(Columns) do
+    ComboBoxF.Items.Add(Columns[i].display);
+
+  Edit := TEdit.Create(Self);
+  Edit.Parent := Self;
+  Edit.Align:=alClient;
+  Edit.Caption:= '';
+  Edit.BorderSpacing.Around := 3;
+
+  Remove := TSpeedButton.Create(Self);
+  Remove.Parent := Self;
+  Remove.Caption:= 'X';
+  Remove.Flat:=True;
+  Remove.Align:= alRight;
+  Remove.OnClick:= ButtonRemoveClick;
+  Remove.BorderSpacing.Around := 3;
 end;
 
 end.

@@ -38,7 +38,7 @@ type
     procedure RefreshSQLContent; override;
     procedure BeforeRefreshSQLContent; override;
     procedure SetDefaultValue(ColumnId: Integer; Value: String);
-    constructor Create(TheOwner: TComponent; ABookId, ARecordId: integer); virtual;
+    constructor Create(TheOwner: TComponent; ATableId, ARecordId: integer); virtual;
     destructor Destroy; override;
   end;
 
@@ -51,8 +51,6 @@ implementation
 
 procedure TFormEdit.ButtonSaveCloseClick(Sender: TObject);
 var
-  {IdQuery: TSQLQuery;
-  IdDataS: TDataSource;}
   f: boolean;
   i: integer;
 begin
@@ -74,16 +72,7 @@ begin
     exit;
   end else
     LabelError.Visible := False;
-  {if RecordId = -1 Then begin
-    IdDataS := TDataSource.Create(Self);
-    IdQuery := TSQLQuery.Create(Self);
-    IdDataS.DataSet := IdQuery;
-    IdQuery.Transaction := Transaction;
-    IdQuery.SQL.Text:='SELECT GEN_ID('+Metadata[TableId].name+', 1) FROM RDB$DATABASE';
-    IdQuery.Open;
-    Datasource.DataSet.FieldByName('id').Value:=IdDataS.DataSet.Fields.Fields[0].Value;
-  end;}
-  { TODO: Проверить задаётся или нет автоматически ID }
+
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
   Close;
@@ -197,14 +186,13 @@ begin
       Button := TSpeedButton.Create(Self);
       Button.Align := alRight;
       Button.BorderSpacing.Around := 1;
-      Button.Caption := 'Разб.';
+      Button.Caption := ' Р ';
+      Button.Hint:= 'Разблокировать';
+      Button.ShowHint:=True;
       Button.Tag := PtrInt(DBComboBox);
       Button.OnClick := @UnLockField;
       Button.Parent := Panel;
-      Button.AutoSize := true;
-      {Button.Flat := true;
-      Button.Transparent := false;
-      Button.Color := clBtnFace;}
+      Button.AutoSize := True;
     end;
   end;
   FEdited:= false;
@@ -239,12 +227,12 @@ begin
   FDefaultValues.Values[IntToStr(ColumnId)]:=Value;
 end;
 
-constructor TFormEdit.Create(TheOwner: TComponent; ABookId, ARecordId: integer);
+constructor TFormEdit.Create(TheOwner: TComponent; ATableId, ARecordId: integer);
 begin
   inherited Create(TheOwner);
   FDefaultValues := TStringList.Create;
   FValues := TStringList.Create;
-  FTableId := ABookId;
+  FTableId := ATableId;
   FRecordId := ARecordId;
 end;
 

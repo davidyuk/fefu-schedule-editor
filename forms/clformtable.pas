@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, Controls, Forms, DBGrids, sysutils,
-  ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter, CLFilterTypes,
+  ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter,
   CLDatabase, CLMetadata, CLFormChild, CLFormEdit, CLFormContainer;
 
 type
@@ -34,7 +34,7 @@ type
     procedure RefreshSQLContent; override;
     procedure BeforeRefreshSQLContent; override;
     procedure SetFilterState(FilterState: TFilterState);
-    constructor Create(TheOwner: TComponent; ABookId: integer); virtual;
+    constructor Create(TheOwner: TComponent; ATableId: integer); virtual;
   end;
 
 implementation
@@ -75,10 +75,10 @@ begin
   Filter.SetPanelsState(FilterState, True);
 end;
 
-constructor TFormTable.Create(TheOwner: TComponent; ABookId: integer);
+constructor TFormTable.Create(TheOwner: TComponent; ATableId: integer);
 begin
   inherited Create(TheOwner);
-  FTableId:= ABookId;
+  FTableId:= ATableId;
   FRecordId:= -1;
   Datasource.DataSet := SQLQuery;
   DBGrid.DataSource := Datasource;

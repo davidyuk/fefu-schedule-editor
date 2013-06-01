@@ -24,7 +24,7 @@ type
     HRMargin = 5;
     StaticButtonsCount = 3; //ShowFull, Add, OpenTable
   private
-    FWidth, FHeight, FItemHover: integer;
+    FWidth, FHeight, FItemHover, FItemHoverFixed: integer;
     FItems: array of TCellItem;
     FItemsTop: array of integer;
     FButtons: array of TOLAPCellButton;
@@ -35,16 +35,19 @@ type
   public
     property Position: TPoint read FPosition;
     property Rect: TRect read FRect;
+    property ItemHover: Integer read FItemHover;
     property Items: ArrOfCellItem read FItems;
     property Width: integer read FWidth;
     property Height: integer read FHeight;
     property Hover: Boolean write FHover;
     function GetText: string;
+    function FixItemHovered:integer;
+    procedure UnFixItemHovered;
     procedure AddItem(AID: integer; AContent: string);
     procedure Draw(ACanvas: TCanvas; ARect: TRect; ShowButtonFull: Boolean);
     procedure UpdateSize(ACanvas: TCanvas);
     procedure MouseClick(x, y: integer);
-    procedure MouseMove(x, y: integer);
+    function MouseMove(x, y: integer):boolean;
     constructor Create(AOwner: TComponent; AFixed: Boolean; ACallback: TOLAPButtonCallback; APosition: TPoint);
   end;
 
@@ -78,6 +81,17 @@ begin
     if i <> 0 Then Result += item_separator;
     Result += content;
   end;
+end;
+
+function TOLAPCell.FixItemHovered: integer;
+begin
+  FItemHoverFixed := FItemHover;
+  Result := FItems[FItemHover].id;
+end;
+
+procedure TOLAPCell.UnFixItemHovered;
+begin
+  FItemHoverFixed := -1;
 end;
 
 procedure TOLAPCell.Draw(ACanvas: TCanvas; ARect: TRect;
@@ -116,8 +130,9 @@ begin
       ACanvas.TextRect(ARect, ARect.Left, currentTop, StringList.Strings[j]);
       currentTop += ACanvas.TextHeight(StringList.Strings[j]);
     end;
-    if not FFixed and FHover and (i = FItemHover) Then begin
-      ACanvas.Pen.Color := RGBToColor(201, 223, 242);
+    if not FFixed and ((FHover and (i = FItemHover)) or (i = FItemHoverFixed)) Then begin
+      if i = FItemHoverFixed Then ACanvas.Pen.Color := RGBToColor(242, 223, 201)
+      else ACanvas.Pen.Color := RGBToColor(201, 223, 242);
       ACanvas.Frame(ARect.Left-Padding+1, itemTop-Padding+1, ARect.Right+Padding-2, currentTop+Padding-2);
     end;
   end;
@@ -185,9 +200,10 @@ begin
     if FButtons[i].MouseClick(x, y) Then Break;
 end;
 
-procedure TOLAPCell.MouseMove(x, y: integer);
+function TOLAPCell.MouseMove(x, y: integer): boolean;
 var i: integer;
 begin
+  FItemHover := -1;
   if (FRect.Right = 0) or (FRect.Bottom = 0) Then exit;
   if InRange(x, FRect.Left, FRect.Right)
     and InRange(y, FRect.Top, FRect.Bottom) Then begin
@@ -196,8 +212,9 @@ begin
       if InRange(y, FItemsTop[i], FItemsTop[i+1]) Then FItemHover := i;
   end else
     FHover := false;
+  Result := False;
   for i:= 0 to High(FButtons) do
-    FButtons[i].MouseMove(x, y);
+    if FButtons[i].MouseMove(x, y) Then Result := true;
 end;
 
 constructor TOLAPCell.Create(AOwner: TComponent; AFixed: Boolean;
@@ -207,6 +224,8 @@ begin
   FPosition := APosition;
   FCallback := ACallback;
   FFixed:=AFixed;
+  FItemHoverFixed := -1;
+  FItemHover := -1;
   setLength(FButtons, StaticButtonsCount);
   FButtons[0] := TOLAPCellButtonShowFull.Create(Self, -1, FCallback);
   FButtons[1] := TOLAPCellButtonAdd.Create(Self, -1, FCallback);

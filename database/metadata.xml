@@ -3,12 +3,12 @@
   <table name="schedule_items" display="Расписание занятий">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
-      <column kind="str" name="day_id" width="84" display="День недели" reference_table="days"/>
+      <column kind="str" name="day_id" width="77" display="День недели" reference_table="days"/>
       <column kind="str" name="time_id" width="67" display="Время" reference_table="times"/>
       <column kind="str" name="group_id" width="49" display="Группа" reference_table="groups"/>
-      <column kind="str" name="course_id" width="176" display="Название дисциплины" reference_table="courses"/>
-      <column kind="str" name="place_id" width="116" display="Номер аудитории" reference_table="places"/>
-      <column kind="str" name="teacher_id" width="198" display="Преподаватель" reference_table="teachers"/>
+      <column kind="str" name="course_id" width="128" display="Название дисциплины" reference_table="courses"/>
+      <column kind="str" name="place_id" width="103" display="Номер аудитории" reference_table="places"/>
+      <column kind="str" name="teacher_id" width="93" display="Преподаватель" reference_table="teachers"/>
     </columns>
   </table>
   <table name="groups_courses" display="Группа - предмет">
@@ -50,10 +50,15 @@
       <column kind="str" name="name" width="244" display="Название дисциплины" reference_table=""/>
     </columns>
   </table>
-  <table name="places" display="Расписание занятий">
+  <table name="schedule_items" display="Расписание занятий">
     <columns>
       <column kind="int" name="id" width="17" display="ID" reference_table=""/>
-      <column kind="str" name="name" width="116" display="Номер аудитории" reference_table=""/>
+      <column kind="str" name="day_id" width="77" display="День недели" reference_table=""/>
+      <column kind="str" name="time_id" width="67" display="Время" reference_table=""/>
+      <column kind="str" name="group_id" width="49" display="Группа" reference_table=""/>
+      <column kind="str" name="course_id" width="128" display="Название дисциплины" reference_table=""/>
+      <column kind="str" name="place_id" width="103" display="Номер аудитории" reference_table=""/>
+      <column kind="str" name="teacher_id" width="93" display="Преподаватель" reference_table=""/>
     </columns>
   </table>
   <table name="places" display="Аудитории">

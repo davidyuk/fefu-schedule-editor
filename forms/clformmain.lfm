@@ -1,10 +1,10 @@
 object FormMain: TFormMain
-  Left = 177
-  Height = 519
-  Top = 158
+  Left = 133
+  Height = 386
+  Top = 124
   Width = 180
   Caption = 'Клиент для работы с БД'
-  ClientHeight = 499
+  ClientHeight = 367
   ClientWidth = 180
   Constraints.MaxWidth = 220
   Constraints.MinHeight = 300
@@ -35,12 +35,12 @@ object FormMain: TFormMain
   end
   object TreeView: TTreeView
     Left = 0
-    Height = 426
+    Height = 266
     Top = 42
     Width = 180
     Align = alClient
     AutoExpand = True
-    DefaultItemHeight = 18
+    DefaultItemHeight = 16
     ReadOnly = True
     ScrollBars = ssAutoBoth
     TabOrder = 1
@@ -50,7 +50,7 @@ object FormMain: TFormMain
   object ButtonShowFormSchedule: TButton
     Left = 3
     Height = 25
-    Top = 471
+    Top = 311
     Width = 174
     Align = alBottom
     BorderSpacing.Around = 3
@@ -58,6 +58,18 @@ object FormMain: TFormMain
     Enabled = False
     OnClick = ButtonShowFormScheduleClick
     TabOrder = 2
+  end
+  object ButtonShowFormConflicts: TButton
+    Left = 3
+    Height = 25
+    Top = 339
+    Width = 174
+    Align = alBottom
+    BorderSpacing.Around = 3
+    Caption = 'Отобразить конфликты'
+    Enabled = False
+    OnClick = ButtonShowFormConflictsClick
+    TabOrder = 3
   end
   object MainMenu: TMainMenu
     left = 64

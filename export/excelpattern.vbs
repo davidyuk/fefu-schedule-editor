@@ -1,4 +1,4 @@
-﻿const xlTop =-4160
+const xlTop =-4160
 const xlContinuous =&H1
 'from: http://nerds-central.blogspot.ru/2007/02/excel-constant-definitions-for-vbscript.html
 Function C(i, j, k, l)

@@ -113,15 +113,17 @@ function GetOrderBySQL(TableId: integer; FieldsIds: array of integer;
 var i: integer;
 begin
   Result := '';
-  with Metadata[TableId] do
-    if length(FieldsIds) <> 0 Then begin
-      for i:= 0 to High(FieldsIds) do begin
-        if i <> 0 Then Result += ', ';
-        If Columns[FieldsIds[i]].referenceTable = '' Then Result+= 'id'
-        else Result+= Columns[FieldsIds[i]].referenceTable+'.'+ReferenceTableFields[i];
-      end;
-      Result := 'ORDER BY '+Result;
+  with Metadata[TableId] do begin
+    for i:= 0 to High(FieldsIds) do begin
+      if i <> 0 Then Result += ', ';
+      if Length(ReferenceTableFields) = Length(FieldsIds) Then
+        If Columns[FieldsIds[i]].referenceTable = '' Then Result+= Columns[FieldsIds[i]].name
+        else Result+= Columns[FieldsIds[i]].referenceTable+'.'+ReferenceTableFields[i]
+      else
+        Result+= Columns[FieldsIds[i]].name;
     end;
+    if Result <> '' Then Result := 'ORDER BY '+Result;
+  end;
 end;
 
 { TMetadata }
@@ -252,4 +254,4 @@ finalization
   Metadata.Free;
 
 end.
-
+

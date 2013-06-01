@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, RTTICtrls, Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Grids, CheckLst, CLFormChild, CLMetadata, CLOLAPGrid,
   CLExport, CLOLAPCell, CLOLAPCellButton, CLOLAPTypes, CLFormEdit, CLFormTable,
-  CLFormContainer, math, sqldb, CLDatabase, CLFilter, CLFilterTypes;
+  CLFormContainer, math, sqldb, db, CLDatabase, CLFilter;
 
 type
 
@@ -40,19 +40,31 @@ type
     procedure CheckGroupFieldsItemClick(Sender: TObject; Index: integer);
     procedure DrawGridClick(Sender: TObject);
     procedure DrawGridDblClick(Sender: TObject);
+    procedure DrawGridDragDrop(Sender, Source: TObject; X, Y: Integer);
+    procedure DrawGridDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
     procedure DrawGridDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
+    procedure DrawGridEndDrag(Sender, Target: TObject; X, Y: Integer);
+    procedure DrawGridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure DrawGridMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure DrawGridStartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure FormShow(Sender: TObject);
     procedure AxisChange(Sender: TObject);
     procedure CheckBoxChange(Sender: TObject);
     procedure PaintBoxClick(Sender: TObject);
+    procedure PaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxMouseLeave(Sender: TObject);
     procedure PaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure PaintBoxPaint(Sender: TObject);
+    procedure PaintBoxStartDrag(Sender: TObject; var DragObject: TDragObject);
   private
+    DragItemId: integer;
+    DragCell: TPoint;
     Filter: TFilter;
     MousePosition: TPoint;
     OLAPGrid: TOLAPGrid;
@@ -65,6 +77,8 @@ type
   private const
     MaxCellAlineSideSizeCommon = 200;
     MaxCellAlineSideSize = 400;
+    TableName = 'schedule_items';
+    TableDispName = 'Расписание занятий';
   public
     procedure RefreshSQLContent; override;
     procedure BeforeRefreshSQLContent; override;
@@ -80,8 +94,8 @@ implementation
 procedure TFormOLAP.FormShow(Sender: TObject);
 var i: integer;
 begin
-  Caption := 'Расписание занятий';
-  FTableId := Metadata.GetTableId('schedule_items');
+  Caption := TableDispName;
+  FTableId := Metadata.GetTableId(TableName);
   DrawGrid.DoubleBuffered := true;
   PanelHint.DoubleBuffered := true;
   Filter := TFilter.Create(Self, FTableId, PanelClient, @RebuildGrid);
@@ -104,36 +118,28 @@ begin
 end;
 
 procedure TFormOLAP.AxisChange(Sender: TObject);
-var X, Y, S: integer;
+  procedure SetCombBox(n: integer; v: Boolean);
+  begin
+    CheckGroupFields.Checked[n] := v;
+    OLAPGrid.DisplayFields[n] := v;
+  end;
 begin
-  X := PtrInt(ComboBoxX.Items.Objects[ComboBoxX.ItemIndex]);
-  Y := PtrInt(ComboBoxY.Items.Objects[ComboBoxY.ItemIndex]);
-  S := PtrInt(ComboBoxS.Items.Objects[ComboBoxS.ItemIndex]);
   if OLAPGrid.AsixX <> 0 Then begin
-    CheckGroupFields.Checked[OLAPGrid.AsixX] := true;
-    CheckGroupFields.Checked[OLAPGrid.AsixY] := true;
-    OLAPGrid.DisplayFields[OLAPGrid.AsixX] := true;
-    OLAPGrid.DisplayFields[OLAPGrid.AsixY] := true;
+    SetCombBox(OLAPGrid.AsixX, true);
+    SetCombBox(OLAPGrid.AsixY, true);
   end;
-  CheckGroupFields.Checked[X] := false;
-  CheckGroupFields.Checked[Y] := false;
-  OLAPGrid.DisplayFields[X] := false;
-  OLAPGrid.DisplayFields[Y] := false;
-  if PtrInt(ComboBoxX.Items.Objects[ComboBoxX.ItemIndex])
-    = PtrInt(ComboBoxY.Items.Objects[ComboBoxY.ItemIndex]) Then
-    DrawGrid.Visible := False
-  else begin
-    OLAPGrid.SortBy := S;
-    OLAPGrid.AsixX := X;
-    OLAPGrid.AsixY := Y;
-    RebuildGrid;
-    DrawGrid.Visible := True;
-  end;
+  OLAPGrid.AsixX := PtrInt(ComboBoxX.Items.Objects[ComboBoxX.ItemIndex]);
+  OLAPGrid.AsixY := PtrInt(ComboBoxY.Items.Objects[ComboBoxY.ItemIndex]);
+  OLAPGrid.SortBy := PtrInt(ComboBoxS.Items.Objects[ComboBoxS.ItemIndex]);
+  SetCombBox(OLAPGrid.AsixX, false);
+  SetCombBox(OLAPGrid.AsixY, false);
+  RebuildGrid;
 end;
 
 procedure TFormOLAP.OLAPCallback(Sender: TObject);
 var
   i: Integer;
+  s: String;
   OLAPButton: TOLAPCellButton;
   OLAPCell: TOLAPCell;
   FormEdit: TFormEdit;
@@ -160,12 +166,14 @@ begin
     end;
     obAdd, obEdit: begin
       FormEdit := TFormEdit.Create(Application, TableId, OLAPButton.ItemId);
-      FormEdit.SetDefaultValue(PtrInt(ComboBoxX.Items.Objects[ComboBoxX.ItemIndex]), IntToStr(OLAPCell.Position.x));
-      FormEdit.SetDefaultValue(PtrInt(ComboBoxY.Items.Objects[ComboBoxY.ItemIndex]), IntToStr(OLAPCell.Position.y));
+      FormEdit.SetDefaultValue(OLAPGrid.AsixX, IntToStr(OLAPCell.Position.x));
+      FormEdit.SetDefaultValue(OLAPGrid.AsixY, IntToStr(OLAPCell.Position.y));
       FormEdit.LockDefaultValues;
       FormContainer.AddForm(FormEdit);
     end;
     obRemove: begin
+      if MessageDlg('Подтверждение удаления записи', 'Вы действительно хотите удалить запись?'+#13#10
+        +OLAPCell.Items[OLAPCell.ItemHover].content, mtWarning, mbOKCancel, 0) = mrCancel Then Exit;
       SQLQuery := TSQLQuery.Create(nil); { TODO: нужно перенести в отдельную функцию }
       SQLQuery.Transaction := Transaction;
       SQLQuery.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+IntToStr(OLAPButton.ItemId);
@@ -178,11 +186,11 @@ begin
       FormTable := TFormTable.Create(Application, TableId);
       FilterState := Filter.FilterState;
       FilterState.content[FilterState.count] := FCells[OLAPCell.Position.x][0].GetText;
-      FilterState.field[FilterState.count] := PtrInt(ComboBoxX.Items.Objects[ComboBoxX.ItemIndex]);
+      FilterState.field[FilterState.count] := OLAPGrid.AsixX;
       FilterState.oper[FilterState.count] := 2;
       FilterState.count += 1;
       FilterState.content[FilterState.count] := FCells[0][OLAPCell.Position.y].GetText;
-      FilterState.field[FilterState.count] := PtrInt(ComboBoxY.Items.Objects[ComboBoxY.ItemIndex]);
+      FilterState.field[FilterState.count] := OLAPGrid.AsixY;
       FilterState.oper[FilterState.count] := 2;
       FilterState.count += 1;
       FormTable.SetFilterState(FilterState);
@@ -202,10 +210,8 @@ end;
 
 //////
 procedure TFormOLAP.DrawGridClick(Sender: TObject);
-var Col, Row: integer;
 begin
-  DrawGrid.MouseToCell(MousePosition.X, MousePosition.Y, Col, Row);
-  FCells[Col][Row].MouseClick(MousePosition.X, MousePosition.Y);
+  FCells[DrawGrid.Col][DrawGrid.Row].MouseClick(MousePosition.X, MousePosition.Y);
 end;
 
 procedure TFormOLAP.RefreshSQLContent;
@@ -231,6 +237,37 @@ begin
   else AlineCol(Cell.x, false);
 end;
 
+procedure TFormOLAP.DrawGridDragDrop(Sender, Source: TObject; X, Y: Integer);
+var
+  SQLQuery: TSQLQuery;
+  Datasource: TDataSource;
+  Col, Row: integer;
+begin
+  DrawGrid.MouseToCell(X, Y, Col, Row);
+  SQLQuery := TSQLQuery.Create(nil);
+  SQLQuery.Transaction := Transaction;
+  SQLQuery.SQL.Text := 'UPDATE '+TableName+' SET '+
+    Metadata[TableId].Columns[OLAPGrid.AsixX].name
+    +'='''+IntToStr(FCells[Col][0].Position.x)+''', '+
+    Metadata[TableId].Columns[OLAPGrid.AsixY].name
+    +'='''+IntToStr(FCells[0][Row].Position.y)+''' WHERE id = '+intToStr(DragItemId);
+  //ShowMessage(SQLQuery.SQL.Text);
+  FormContainer.BeforeRefreshSQLContent;
+  SQLQuery.ExecSQL;
+  Transaction.Commit;
+  FormContainer.RefreshSQLContent;
+  SQLQuery.Free;
+  RebuildGrid;
+end;
+
+procedure TFormOLAP.DrawGridDragOver(Sender, Source: TObject; X, Y: Integer;
+  State: TDragState; var Accept: Boolean);
+var Col, Row: integer;
+begin
+  DrawGrid.MouseToCell(MousePosition.x, MousePosition.y, Col, Row);
+  Accept := (Sender = Source) and ((DragCell.x <> Col) or (DragCell.y <> Row)) or (Sender = FCellHint);
+end;
+
 procedure TFormOLAP.DrawGridMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 var i, j: integer;
@@ -242,10 +279,38 @@ begin
   DrawGrid.Invalidate;
 end;
 
+procedure TFormOLAP.DrawGridStartDrag(Sender: TObject;
+  var DragObject: TDragObject);
+var Col, Row: integer;
+begin
+  DrawGrid.MouseToCell(MousePosition.x, MousePosition.y, Col, Row);
+  if (Row = 0) or (Col = 0) Then Exit;
+  DragItemId := FCells[Col][Row].FixItemHovered;
+  DragCell := Point(Col, Row);
+end;
+
 procedure TFormOLAP.DrawGridDrawCell(Sender: TObject; aCol, aRow: Integer;
   aRect: TRect; aState: TGridDrawState);
 begin
   FCells[aCol][aRow].Draw(DrawGrid.Canvas, aRect, true);
+end;
+
+procedure TFormOLAP.DrawGridEndDrag(Sender, Target: TObject; X, Y: Integer);
+var Col, Row: integer;
+begin
+  DrawGrid.MouseToCell(MousePosition.x, MousePosition.y, Col, Row);
+  FCells[Col][Row].UnFixItemHovered;
+  DrawGrid.InvalidateCell(Col, Row);
+end;
+
+procedure TFormOLAP.DrawGridMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var Col, Row: integer;
+begin
+  DrawGrid.MouseToCell(X, Y, Col, Row);
+  if (Col = 0) or (Row = 0) or
+    (length(FCells[Col][Row].Items)=0) Then Exit;
+  DrawGrid.BeginDrag(false, 3);
 end;
 
 procedure TFormOLAP.ButtonAlineClick(Sender: TObject);
@@ -317,6 +382,17 @@ begin
   FCellHint.MouseClick(MousePosition.x, MousePosition.y);
 end;
 
+procedure TFormOLAP.PaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if DragItemId = -1 Then Exit;
+  if not FCellHint.MouseMove(MousePosition.x, MousePosition.y) Then begin
+    DrawGrid.BeginDrag(false, 3); { TODO: не работает OnClick и вызывается MouseLeave }
+    DragItemId := FCellHint.FixItemHovered;
+    DragCell := Point(-1, -1);
+  end;
+end;
+
 procedure TFormOLAP.PaintBoxMouseLeave(Sender: TObject);
 begin
   PanelHint.Visible := false;
@@ -333,13 +409,14 @@ end;
 procedure TFormOLAP.PaintBoxPaint(Sender: TObject);
 var t: TRect;
 begin
-  with t do begin
-    Left := 0;
-    Top := 0;
-    Right := PaintBox.Width;
-    Bottom := PaintBox.Height;
-  end;
-  FCellHint.Draw(PaintBox.Canvas, t, false); //PaintBox.BoundsRect - почти, но не то
+  t:= Bounds(0, 0, PaintBox.Width, PaintBox.Height);
+  FCellHint.Draw(PaintBox.Canvas, t, false);
+end;
+
+procedure TFormOLAP.PaintBoxStartDrag(Sender: TObject;
+  var DragObject: TDragObject);
+begin
+  DragCell := Point(-1, -1);
 end;
 
 constructor TFormOLAP.Create(TheOwner: TComponent);

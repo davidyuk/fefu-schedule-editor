@@ -7,13 +7,14 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, ExtCtrls, ComCtrls, StdCtrls,
   Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, CLFormOLAP,
-  Graphics;
+  Graphics, CLFormConflicts;
 
 type
 
   { TFormMain }
 
   TFormMain = class(TForm)
+    ButtonShowFormConflicts: TButton;
     ButtonShowFormSchedule: TButton;
     MainMenu: TMainMenu;
     MenuItemFile: TMenuItem;
@@ -23,6 +24,7 @@ type
     PanelTools: TPanel;
     ToggleBoxConnect: TToggleBox;
     TreeView: TTreeView;
+    procedure ButtonShowFormConflictsClick(Sender: TObject);
     procedure ButtonShowFormScheduleClick(Sender: TObject);
     procedure FormTableClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormTableActive(Sender: TObject);
@@ -35,6 +37,7 @@ type
   private
     TreeRootQuery: TTreeNode;
     FormTableArr: array of TFormTable;
+    FormConflicts: TFormConflicts;
   public
     { public declarations }
   end;
@@ -64,6 +67,7 @@ begin
   FreeAndNil(Bitmap);
   TreeView.Images := ImageList;
   FormContainer := TFormContainer.Create();
+  Caption := Metadata.Title;
 end;
 
 procedure TFormMain.ToggleBoxConnectChange(Sender: TObject);
@@ -90,6 +94,7 @@ begin
     end;
     ToggleBoxConnect.Caption := 'Отключиться от БД';
     ButtonShowFormSchedule.Enabled := True;
+    ButtonShowFormConflicts.Enabled := True;
   end else begin
     TreeView.Enabled := False;
     TreeView.Items.Clear;
@@ -150,6 +155,17 @@ var FormOLAP: TFormOLAP;
 begin
   FormOLAP := TFormOLAP.Create(Application);
   FormContainer.AddForm(FormOLAP);
+end;
+
+procedure TFormMain.ButtonShowFormConflictsClick(Sender: TObject);
+begin
+  if Assigned(FormConflicts) Then begin
+    FormConflicts.Show;
+    FormConflicts.BringToFront;
+  end else begin
+    FormConflicts := TFormConflicts.Create(Application);
+    FormConflicts.Show;
+  end;
 end;
 
 procedure TFormMain.FormTableActive(Sender: TObject);
