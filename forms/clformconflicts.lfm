@@ -1,49 +1,28 @@
 inherited FormConflicts: TFormConflicts
-  Left = 360
-  Top = 374
-  Caption = 'Form1'
-  object Panel1: TPanel[0]
-    Left = 3
-    Height = 50
-    Top = 3
-    Width = 314
+  Left = 342
+  Top = 152
+  Caption = 'Конфликты в расписании'
+  OnShow = FormShow
+  object PanelControls: TPanel[0]
+    Left = 0
+    Height = 0
+    Top = 0
+    Width = 320
     Align = alTop
-    BorderSpacing.Around = 3
-    Caption = 'Panel1'
-    ClientHeight = 50
-    ClientWidth = 314
+    AutoSize = True
+    BevelOuter = bvNone
     TabOrder = 0
-    object ButtonUpdate: TButton
-      Left = 197
-      Height = 42
-      Top = 4
-      Width = 113
-      Align = alRight
-      AutoSize = True
-      BorderSpacing.Around = 3
-      Caption = 'Обновить список'
-      OnClick = ButtonUpdateClick
-      TabOrder = 0
-    end
   end
-  object TreeView1: TTreeView[1]
+  object TreeViewConflicts: TTreeView[1]
     Left = 0
-    Height = 184
-    Top = 56
+    Height = 240
+    Top = 0
     Width = 320
     Align = alClient
-    DefaultItemHeight = 16
+    DefaultItemHeight = 18
+    ReadOnly = True
     TabOrder = 1
-  end
-  object Memo1: TMemo[2]
-    Left = 0
-    Height = 184
-    Top = 56
-    Width = 320
-    Align = alClient
-    Lines.Strings = (
-      'Memo1'
-    )
-    TabOrder = 2
+    OnDblClick = TreeViewConflictsDblClick
+    Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
 end

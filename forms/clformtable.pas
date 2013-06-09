@@ -27,6 +27,7 @@ type
     procedure DBGridColumnSized(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
+    DisplayRecordIdSQLPart: String;
     Filter: TFilter;
     procedure RefreshColumns;
     procedure FilterApply;
@@ -34,6 +35,7 @@ type
     procedure RefreshSQLContent; override;
     procedure BeforeRefreshSQLContent; override;
     procedure SetFilterState(FilterState: TFilterState);
+    procedure SetDisplayRecordIds(Ids: array of integer);
     constructor Create(TheOwner: TComponent; ATableId: integer); virtual;
   end;
 
@@ -75,6 +77,19 @@ begin
   Filter.SetPanelsState(FilterState, True);
 end;
 
+procedure TFormTable.SetDisplayRecordIds(Ids: array of integer);
+var i: integer;
+begin
+  DisplayRecordIdSQLPart := '';
+  for i:= 0 to High(Ids) do begin
+    if i <> 0 Then DisplayRecordIdSQLPart += ' or ';
+    DisplayRecordIdSQLPart += format('%s.%s = %d',
+      [Metadata[TableId].name, Metadata[TableId].Columns[0].name, Ids[i]]);
+  end;
+  if DisplayRecordIdSQLPart <> '' Then
+    DisplayRecordIdSQLPart := '('+DisplayRecordIdSQLPart+')';
+end;
+
 constructor TFormTable.Create(TheOwner: TComponent; ATableId: integer);
 begin
   inherited Create(TheOwner);
@@ -108,6 +123,9 @@ begin
     for i:= 0 to High(sArr) do
       SQLQuery.ParamByName('P'+intToStr(i)).AsString:= sArr[i];
   end;
+  if DisplayRecordIdSQLPart <> '' Then
+     if Filter.Applyed Then SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' and ' + DisplayRecordIdSQLPart
+     else SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' where ' + DisplayRecordIdSQLPart;
   SQLQuery.Open;
   RefreshColumns;
 end;

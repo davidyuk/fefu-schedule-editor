@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, RTTICtrls, Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Grids, CheckLst, CLFormChild, CLMetadata, CLOLAPGrid,
   CLExport, CLOLAPCell, CLOLAPCellButton, CLOLAPTypes, CLFormEdit, CLFormTable,
-  CLFormContainer, math, sqldb, db, CLDatabase, CLFilter;
+  CLFormContainer, math, sqldb, db, CLDatabase, CLFilter, CLConflicts;
 
 type
 
@@ -18,6 +18,7 @@ type
     ButtonExportHTML: TButton;
     ButtonAline: TButton;
     ButtonExportExcel: TButton;
+    CheckBoxConflicts: TCheckBox;
     CheckBoxAutoSize: TCheckBox;
     CheckBoxNames: TCheckBox;
     CheckBoxEmpty: TCheckBox;
@@ -26,6 +27,7 @@ type
     ComboBoxY: TComboBox;
     ComboBoxS: TComboBox;
     DrawGrid: TDrawGrid;
+    LabelAdditional: TLabel;
     LabelX: TLabel;
     LabelY: TLabel;
     LabelS: TLabel;
@@ -73,6 +75,7 @@ type
     procedure AlineCol(ACol: integer; common: boolean);
     procedure AlineRow(ARow: integer; common: boolean);
     procedure RebuildGrid;
+    function GetConflictInformation(ACell: TOLAPCell):String;
     procedure OLAPCallback(Sender: TObject);
   private const
     MaxCellAlineSideSizeCommon = 200;
@@ -81,7 +84,6 @@ type
     TableDispName = 'Расписание занятий';
   public
     procedure RefreshSQLContent; override;
-    procedure BeforeRefreshSQLContent; override;
     constructor Create(TheOwner: TComponent); override;
   end;
 
@@ -155,7 +157,8 @@ begin
       FCellHint.Free;
       FCellHint := TOLAPCell.Create(Self, False, @OLAPCallback, OLAPCell.Position);
       for i:= 0 to High(OLAPCell.Items) do
-        FCellHint.AddItem(OLAPCell.Items[i].id, OLAPCell.Items[i].content);
+        with OLAPCell.Items[i] do
+          FCellHint.AddItem(id, content, conflictids);
       FCellHint.UpdateSize(PaintBox.Canvas);
       PanelHint.Width := max(OLAPCell.Width+1, OLAPCell.Rect.Right-OLAPCell.Rect.Left);
       PanelHint.Height := max(OLAPCell.Height+1, OLAPCell.Rect.Bottom-OLAPCell.Rect.Top);
@@ -208,6 +211,23 @@ begin
   Invalidate;
 end;
 
+function TFormOLAP.GetConflictInformation(ACell: TOLAPCell): String;
+var i, j: integer;
+begin
+  Result := '';
+  with ACell do begin
+    if (ItemHover = -1) or (Length(Items[ItemHover].conflictids) = 0) Then exit;
+    Result := 'Описание конфликта:';
+    for i:= 0 to High(Items[ItemHover].conflictids) do
+      with ConflictsFinder[Items[ItemHover].conflictids[i]] do begin
+        Result += #13#10 + ConflictsFinder.GetConflictTypeName(ctype);
+        Result += #13#10 + name + #13#10'Ячейки:';
+        for j:= 0 to High(cells) do
+          Result += ' '+intToStr(cells[j]);
+      end;
+  end;
+end;
+
 //////
 procedure TFormOLAP.DrawGridClick(Sender: TObject);
 begin
@@ -217,11 +237,6 @@ end;
 procedure TFormOLAP.RefreshSQLContent;
 begin
   RebuildGrid;
-end;
-
-procedure TFormOLAP.BeforeRefreshSQLContent;
-begin
-
 end;
 
 procedure TFormOLAP.DrawGridDblClick(Sender: TObject);
@@ -270,12 +285,16 @@ end;
 
 procedure TFormOLAP.DrawGridMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
-var i, j: integer;
+var
+  i, j: integer;
+  Cell: TPoint;
 begin
   MousePosition := Point(X, Y);
   for i:= 0 to High(FCells) do
     for j:= 0 to High(FCells[0]) do
       FCells[i][j].MouseMove(x, y);
+  DrawGrid.MouseToCell(X, Y, Cell.x, Cell.y);
+  LabelAdditional.Caption := GetConflictInformation(FCells[Cell.x][Cell.y]);
   DrawGrid.Invalidate;
 end;
 
@@ -330,7 +349,7 @@ begin
     ComboBoxX.Items.Strings[ComboBoxX.ItemIndex],
     ComboBoxY.Items.Strings[ComboBoxY.ItemIndex],
     ComboBoxS.Items.Strings[ComboBoxS.ItemIndex],
-    TableId, Filter.FilterState, FCells, ['Conflict1', 'Conflict2']);
+    TableId, Filter.FilterState, FCells);
 end;
 
 procedure TFormOLAP.ButtonExportHTMLClick(Sender: TObject);
@@ -339,7 +358,7 @@ begin
     ComboBoxX.Items.Strings[ComboBoxX.ItemIndex],
     ComboBoxY.Items.Strings[ComboBoxY.ItemIndex],
     ComboBoxS.Items.Strings[ComboBoxS.ItemIndex],
-    TableId, Filter.FilterState, FCells, ['Conflict1', 'Conflict2']);
+    TableId, Filter.FilterState, FCells);
 end;
 
 procedure TFormOLAP.CheckGroupFieldsItemClick(Sender: TObject; Index: integer);
@@ -372,8 +391,9 @@ end;
 
 procedure TFormOLAP.CheckBoxChange(Sender: TObject);
 begin
-  OLAPGrid.ShowNames:= CheckBoxNames.Checked;
-  OLAPGrid.ShowEmpty:= CheckBoxEmpty.Checked;
+  OLAPGrid.ShowNames := CheckBoxNames.Checked;
+  OLAPGrid.ShowEmpty := CheckBoxEmpty.Checked;
+  OLAPGrid.ShowConflicts := CheckBoxConflicts.Checked;
   RebuildGrid;
 end;
 
@@ -404,12 +424,13 @@ begin
   MousePosition := Point(X, Y);
   FCellHint.MouseMove(X, Y);
   PaintBox.Invalidate;
+  LabelAdditional.Caption := GetConflictInformation(FCellHint);
 end;
 
 procedure TFormOLAP.PaintBoxPaint(Sender: TObject);
 var t: TRect;
 begin
-  t:= Bounds(0, 0, PaintBox.Width, PaintBox.Height);
+  t:= Bounds(0, 0, PaintBox.Width+1, PaintBox.Height);
   FCellHint.Draw(PaintBox.Canvas, t, false);
 end;
 

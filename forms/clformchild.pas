@@ -18,10 +18,17 @@ type
     property TableId: integer read FTableId;
     property RecordId: integer read FRecordId;
     procedure RefreshSQLContent; virtual; abstract;
-    procedure BeforeRefreshSQLContent; virtual; abstract;
+    procedure BeforeRefreshSQLContent; virtual;
   end;
 
 implementation
+
+{ TFormChild }
+
+procedure TFormChild.BeforeRefreshSQLContent;
+begin
+
+end;
 
 end.
 

@@ -12,6 +12,7 @@ type
   TCellItem = record
     id: integer;
     content: string;
+    conflictids: array of integer;
   end;
 
   ArrOfCellItem = Array of TCellItem;
@@ -43,12 +44,12 @@ type
     function GetText: string;
     function FixItemHovered:integer;
     procedure UnFixItemHovered;
-    procedure AddItem(AID: integer; AContent: string);
+    procedure AddItem(AID: integer; AContent: string; AConflictIds: array of integer);
     procedure Draw(ACanvas: TCanvas; ARect: TRect; ShowButtonFull: Boolean);
     procedure UpdateSize(ACanvas: TCanvas);
     procedure MouseClick(x, y: integer);
     function MouseMove(x, y: integer):boolean;
-    constructor Create(AOwner: TComponent; AFixed: Boolean; ACallback: TOLAPButtonCallback; APosition: TPoint);
+    constructor Create(AOwner: TComponent; AFixed: Boolean; ACallback: TOLAPButtonCallback; APosition: TPoint); virtual;
   end;
 
   TOLAPCells = array of array of TOLAPCell;
@@ -58,12 +59,17 @@ implementation
 
 { TOLAPCell }
 
-procedure TOLAPCell.AddItem(AID: integer; AContent: string);
+procedure TOLAPCell.AddItem(AID: integer; AContent: string;
+  AConflictIds: array of integer);
+var i: integer;
 begin
   setLength(FItems, length(FItems)+1);
   with FItems[High(FItems)] do begin
     id := AID;
     content := AContent;
+    SetLength(conflictids, Length(AConflictIds));
+    for i:= 0 to High(AConflictIds) do
+      conflictids[i] := AConflictIds[i];
   end;
   if FFixed Then Exit;
   setLength(FItemsTop, Length(FItems)+1);
@@ -97,7 +103,7 @@ end;
 procedure TOLAPCell.Draw(ACanvas: TCanvas; ARect: TRect;
   ShowButtonFull: Boolean);
 var
-  i, j, currentTop, itemTop: integer;
+  i, j, currentTop: integer;
   StringList: TStringList;
   f: boolean;
 begin
@@ -123,9 +129,13 @@ begin
       ACanvas.Pen.Color := $bbbbbb;
       ACanvas.Line(ARect.Left+HRMargin, currentTop-Padding-1, ARect.Right-HRMargin, currentTop-Padding-1);
     end;
-    itemTop := currentTop;
     StringList.Text := content;
-    if not FFixed Then FItemsTop[i] := currentTop-Padding;
+    if length(conflictids) <> 0 Then begin
+      ACanvas.Brush.Color := RGBToColor(255, 200, 200);
+      ACanvas.Brush.Style := bsBDiagonal;
+      ACanvas.FillRect(FRect.Left, FRect.Top + FItemsTop[i], FRect.Right, FRect.Top + FItemsTop[i+1]);
+      ACanvas.Brush.Style := bsSolid;
+    end;
     for j:= 0 to StringList.Count-1 do begin
       ACanvas.TextRect(ARect, ARect.Left, currentTop, StringList.Strings[j]);
       currentTop += ACanvas.TextHeight(StringList.Strings[j]);
@@ -133,11 +143,14 @@ begin
     if not FFixed and ((FHover and (i = FItemHover)) or (i = FItemHoverFixed)) Then begin
       if i = FItemHoverFixed Then ACanvas.Pen.Color := RGBToColor(242, 223, 201)
       else ACanvas.Pen.Color := RGBToColor(201, 223, 242);
-      ACanvas.Frame(ARect.Left-Padding+1, itemTop-Padding+1, ARect.Right+Padding-2, currentTop+Padding-2);
+      ACanvas.Line(FRect.Left+1, FRect.Top + FItemsTop[i]+1, FRect.Left+1, FRect.Top + FItemsTop[i+1]-3); //left
+      ACanvas.Line(FRect.Right-3, FRect.Top + FItemsTop[i]+1, FRect.Right-3, FRect.Top + FItemsTop[i+1]-3); //right
+      ACanvas.Line(FRect.Left+1, FRect.Top + FItemsTop[i]+1, FRect.Right-3, FRect.Top + FItemsTop[i]+1); //top
+      ACanvas.Line(FRect.Left+1, FRect.Top + FItemsTop[i+1]-3, FRect.Right-3, FRect.Top + FItemsTop[i+1]-3); //bottom
+      //ACanvas.Frame(ARect.Left-Padding+1, itemTop-Padding+1, ARect.Right+Padding-2, currentTop+Padding-2);
     end;
   end;
   StringList.Free;
-  if (Length(FItems) <> 0) and Not FFixed Then FItemsTop[High(FItemsTop)] := currentTop;
 
   //0-ShowFull, 1-Add, 2-OpenTable
   If FFixed Then Exit;
@@ -160,12 +173,12 @@ begin
   for i:= 0 to High(FItems) do begin
     with FButtons[i*2+StaticButtonsCount] do begin
       Left := FRect.Right-18*(2-0);
-      Top := FItemsTop[i]+2;
+      Top := FRect.Top + FItemsTop[i] + 2;
       Visible := f or ((FRect.Bottom-Top)>(Size*2));
     end;
     with FButtons[i*2+StaticButtonsCount+1] do begin
       Left := FRect.Right-18*(2-1);
-      Top := FItemsTop[i]+2;
+      Top := FRect.Top + FItemsTop[i] + 2;
       Visible := f or ((FRect.Bottom-Top)>(Size*2));
     end;
   end;
@@ -179,11 +192,12 @@ var
   t: TStringList;
 begin
   FWidth := 0;
-  FHeight := Padding*2;
+  FHeight := 0;
   For i:= 0 to High(FItems) do with FItems[i] do begin
     if i <> 0 Then FHeight += 6;
     t:= TStringList.Create;
     t.Text := content;
+    if not FFixed Then FItemsTop[i] := FHeight;
     for j:= 0 to t.Count-1 do begin
       FHeight += ACanvas.TextHeight(t.Strings[j]);
       FWidth := Max(FWidth, ACanvas.TextWidth(t.Strings[j]));
@@ -191,6 +205,8 @@ begin
     t.Free;
   end;
   FWidth += Padding*2;
+  FHeight += Padding*2;
+  if (Length(FItems) <> 0) and Not FFixed Then FItemsTop[High(FItemsTop)] := FHeight;
 end;
 
 procedure TOLAPCell.MouseClick(x, y: integer);
@@ -209,7 +225,7 @@ begin
     and InRange(y, FRect.Top, FRect.Bottom) Then begin
     FHover := True;
     for i:= 0 to High(FItemsTop)-1 do
-      if InRange(y, FItemsTop[i], FItemsTop[i+1]) Then FItemHover := i;
+      if InRange(y, FRect.Top + FItemsTop[i], FRect.Top + FItemsTop[i+1]) Then FItemHover := i;
   end else
     FHover := false;
   Result := False;

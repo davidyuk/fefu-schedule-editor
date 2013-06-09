@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Dialogs, db, sqldb, CLOLAPCell, CLMetadata, CLDatabase, CLOLAPTypes,
-  CLFilter;
+  CLFilter, CLConflicts;
 
 type
 
@@ -20,7 +20,7 @@ type
     FTableId, FAxisX, FAxisY, FSort: integer;
     FStringListX, FStringListY: TStringList;
     FDisplayFields: array of Boolean;
-    FShowNames, FShowEmpty: Boolean;
+    FShowNames, FShowEmpty, FShowConflicts: Boolean;
     FCallback: TOLAPButtonCallback;
     procedure FillStringList(StringList: TStringList; FieldId: integer);
     procedure HideEmpty(var ACells: TOLAPCells; Used: ArrOfBoolean; Col: boolean);
@@ -30,6 +30,7 @@ type
     property SortBy: integer read FSort write FSort;
     property ShowNames: Boolean read FShowNames write FShowNames;
     property ShowEmpty: Boolean read FShowEmpty write FShowEmpty;
+    property ShowConflicts: Boolean read FShowConflicts write FShowConflicts;
     procedure RebuildGrid(var FCells: TOLAPCells);
     constructor Create(AOwner: TComponent; ATableId: integer; AFilter: TFilter;ACallback: TOLAPButtonCallback); virtual;
     destructor Destroy; override;
@@ -90,6 +91,7 @@ var
   i, j, x, y: integer;
   s: string;
   sArr: array of string;
+  iArr: array of integer;
   SQLQuery: TSQLQuery;
   Datasource: TDataSource;
   UsedX, UsedY: array of Boolean;
@@ -107,9 +109,9 @@ begin
       FCells[i][j] := TOLAPCell.Create(Self, (i=0)or(j=0), FCallback, Point(i, j));
 
   for i:= 1 to High(FCells) do
-    FCells[i][0].AddItem(-1, FStringListX.Strings[i-1]);
+    FCells[i][0].AddItem(-1, FStringListX.Strings[i-1], []);
   for i:= 1 to High(FCells[0]) do
-    FCells[0][i].AddItem(-1, FStringListY.Strings[i-1]);
+    FCells[0][i].AddItem(-1, FStringListY.Strings[i-1], []);
 
   SQLQuery := TSQLQuery.Create(nil);
   Datasource := TDataSource.Create(nil);
@@ -124,7 +126,10 @@ begin
   SQLQuery.SQL.Text := SQLQuery.SQL.Text+GetOrderBySQL(FTableId, [FAxisX, FAxisY, FSort], ['id', 'id', 'name']);
   SQLQuery.Open;
 
+  if FShowConflicts Then ConflictsFinder.UpdateConflicts;
+
   x:= 0; y:= 0;
+  SetLength(iArr, 0);
   SetLength(UsedX, FStringListX.Count);
   SetLength(UsedY, FStringListY.Count);
   while x < FStringListX.Count do With Datasource.DataSet do begin
@@ -140,7 +145,8 @@ begin
       end;
       UsedX[x]:= true;
       UsedY[y]:= true;
-      FCells[x+1][y+1].AddItem(Fields.Fields[0].AsInteger, s);
+      if FShowConflicts Then ConflictsFinder.CheckCellId(Fields.Fields[0].AsInteger, iArr);
+      FCells[x+1][y+1].AddItem(Fields.Fields[0].AsInteger, s, iArr);
       Next;
     end;
     if y = FStringListY.Count-1 Then begin

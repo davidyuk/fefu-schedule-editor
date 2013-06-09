@@ -37,7 +37,6 @@ type
   private
     TreeRootQuery: TTreeNode;
     FormTableArr: array of TFormTable;
-    FormConflicts: TFormConflicts;
   public
     { public declarations }
   end;
@@ -99,9 +98,10 @@ begin
     TreeView.Enabled := False;
     TreeView.Items.Clear;
     ToggleBoxConnect.Caption := 'Подключиться к БД';
-    ButtonShowFormSchedule.Enabled := False;
     FormContainer.Clear;
     Connection.Connected := false;
+    ButtonShowFormSchedule.Enabled := False;
+    ButtonShowFormConflicts.Enabled := False;
   end;
 end;
 
@@ -158,14 +158,10 @@ begin
 end;
 
 procedure TFormMain.ButtonShowFormConflictsClick(Sender: TObject);
+var FormConflicts: TFormConflicts;
 begin
-  if Assigned(FormConflicts) Then begin
-    FormConflicts.Show;
-    FormConflicts.BringToFront;
-  end else begin
-    FormConflicts := TFormConflicts.Create(Application);
-    FormConflicts.Show;
-  end;
+  FormConflicts := TFormConflicts.Create(Application);
+  FormContainer.AddForm(FormConflicts);
 end;
 
 procedure TFormMain.FormTableActive(Sender: TObject);

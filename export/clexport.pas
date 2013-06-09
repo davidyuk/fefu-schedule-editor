@@ -6,14 +6,12 @@ interface
 
 uses
   Classes, SysUtils, Dialogs, strutils, CLOLAPCell, math, CLFilter,
-  CLMetadata, LazUTF8;
+  CLMetadata, CLConflicts, LazUTF8;
 
 procedure ExportToExcelVBS(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
-  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells;
-  AConflicts: array of string);
+  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells);
 procedure ExportToHTML(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
-  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells;
-  AConflicts: array of string);
+  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells);
 
 
 implementation
@@ -63,8 +61,7 @@ begin
 end;
 
 procedure ExportToExcelVBS(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
-  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells;
-  AConflicts: array of string);
+  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells);
 const
   dpCells = #9'.Cells(%d, %d).Value = "%s"'#13#10;
 var
@@ -115,15 +112,18 @@ begin
   end else
     filters := '';
 
-  if Length(AConflicts) <> 0 Then begin
+  ConflictsFinder.UpdateConflicts;
+  if ConflictsFinder.Count <> 0 Then begin
     conflicts := Format(dpCells, [curRow, 1, dpLabelConflictsFound]);
     conflicts += Format(#9'.Cells(%d, %d).Font.Size = 16'#13#10, [curRow, 1]);
     conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
     curRow += 1;
     j:= curRow;
-    for i:= 0 to High(AConflicts) do begin
-      conflicts += Format(dpCells,
-        [curRow, 1, AConflicts[i]]);
+    for i:= 0 to ConflictsFinder.Count-1 do begin
+      s := ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)+' '+ConflictsFinder[i].name;
+      for j:= 0 to High(ConflictsFinder[i].cells) do
+        s += ' '+intToStr(ConflictsFinder[i].cells[j]);
+      conflicts += Format(dpCells, [curRow, 1, s]);
       conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
       curRow += 1;
     end;
@@ -160,10 +160,9 @@ begin
 end;
 
 procedure ExportToHTML(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
-  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells;
-  AConflicts: array of string);
+  TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells);
 var
-  fileName, table, information, filters, conflicts: string;
+  fileName, table, information, filters, conflicts, s: string;
   i, j, k: integer;
   content: TStringList;
 begin
@@ -205,10 +204,15 @@ begin
   end;
   table += '</table>';
 
-  if Length(AConflicts) <> 0 Then begin
+  ConflictsFinder.UpdateConflicts;
+  if ConflictsFinder.Count <> 0 Then begin
     conflicts := '<h2>'+dpLabelConflictsFound+'</h2>'#13#10'<table>'#13#10;
-    for i:= 0 to High(AConflicts) do
-      conflicts += '  <tr><td>'+AConflicts[i]+'</td></tr>'#13#10;
+    for i:= 0 to ConflictsFinder.Count - 1 do begin
+      s := ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)+' '+ConflictsFinder[i].name;
+      for j:= 0 to High(ConflictsFinder[i].cells) do
+        s += ' '+intToStr(ConflictsFinder[i].cells[j]);
+      conflicts += '  <tr><td>'+s+'</td></tr>'#13#10;
+    end;
     conflicts += '</table>';
   end else
     conflicts := dpLabelConflictsNotFound;
