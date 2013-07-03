@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, DbCtrls,
   ExtCtrls, StdCtrls, CLFormChild, sqldb, db, CLDatabase, CLMetadata,
-  CLFormContainer, Graphics, Buttons;
+  CLFormContainer, Graphics, Buttons, DBGrids;
 
 type
 
@@ -17,6 +17,7 @@ type
     ButtonSaveClose: TButton;
     ButtonCancel: TButton;
     Datasource: TDatasource;
+    DBGrid1: TDBGrid;
     LabelError: TLabel;
     PanelButtons: TPanel;
     ScrollBox: TScrollBox;
@@ -166,7 +167,7 @@ begin
       Query := TSQLQuery.Create(Self);
       DataS.DataSet := Query;
       Query.Transaction := Transaction;
-      Query.SQL.Text:='SELECT ID, NAME FROM '+Metadata[TableId].Columns[i].referenceTable;
+      Query.SQL.Text:='SELECT id, name FROM '+Metadata[TableId].Columns[i].referenceTable+' ORDER BY name';
       Query.Open;
       DBComboBox := TDBLookupComboBox.Create(Panel);
       DBComboBox.Align:= alClient;
@@ -175,8 +176,8 @@ begin
       DBComboBox.DataSource := Datasource;
       DBComboBox.DataField := Metadata[TableId].Columns[i].name;
       DBComboBox.ListSource := DataS;
-      DBComboBox.ListField := 'NAME';
-      DBComboBox.KeyField := 'ID';
+      DBComboBox.ListField := 'name';
+      DBComboBox.KeyField := 'id';
       DBComboBox.Tag:= PtrInt(Labell);
       SetLength(DBComboBoxes, Length(DBComboBoxes)+1);
       DBComboBoxes[High(DBComboBoxes)]:= DBComboBox;

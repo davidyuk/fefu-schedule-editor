@@ -23,6 +23,8 @@ const
   dpConflicts = '<%conflicts%>';
   dpLabelFilter = 'Выбранные фильтры:';
   dpLabelConflictsFound = 'Обнаружены конфликты:';
+  dpLabelConflictsCell = 'Конфликты:';
+  dpLabelConflictsNumber = 'Номера конфликтов:';
   dpLabelConflictsNotFound = 'Конфликты не обнаружены';
   dpLabelH = 'По горизонтали';
   dpLabelV = 'По вертикали';
@@ -66,9 +68,23 @@ const
   dpCells = #9'.Cells(%d, %d).Value = "%s"'#13#10;
 var
   fileName, title, table, information, filters, conflicts: string;
-  i, j, k, maxCount, curRow: integer;
+  i, j, k, len, maxCount, curRow: integer;
   content: TStringList;
   s: string;
+  ctype: TConflictType;
+  function GetCell(Item: TCellItem; var len: integer):string;
+  var i: integer;
+  begin
+    Result := Item.content;
+    len := UTF8Length(Result);
+    if Length(Item.conflictids) <> 0 Then begin
+      Result += #13#10+dpLabelConflictsCell;
+      for i:= 0 to High(Item.conflictids) do begin
+        if i <> 0 Then Result += ',';
+        Result += ' '+intToStr(Item.conflictids[i]+1);
+      end;
+    end;
+  end;
 begin
   fileName := GetFileName('VB скрипт (*.vbs)|*.vbs|', 'Безымянный.vbs');
   if fileName = '' Then exit;
@@ -119,14 +135,31 @@ begin
     conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
     curRow += 1;
     j:= curRow;
-    for i:= 0 to ConflictsFinder.Count-1 do begin
-      s := ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)+' '+ConflictsFinder[i].name;
-      for j:= 0 to High(ConflictsFinder[i].cells) do
-        s += ' '+intToStr(ConflictsFinder[i].cells[j]);
+
+    s := '';
+    ctype := TConflictType(-1);
+    for i:= 0 to ConflictsFinder.Count - 1 do begin
+      if ConflictsFinder[i].ctype <> ctype Then begin
+        if s <> '' Then begin
+          conflicts += Format(dpCells, [curRow, 1, s]);
+          conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
+          curRow += 1;
+        end;
+        conflicts += Format(dpCells, [curRow, 1, ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)]);
+        conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
+        curRow += 1;
+        ctype := ConflictsFinder[i].ctype;
+        s := dpLabelConflictsNumber;
+      end;
+      if (s <> dpLabelConflictsNumber) and (i <> 0)  Then s += ',';
+      s += ' '+intToStr(i+1);
+    end;
+    if s <> '' Then begin
       conflicts += Format(dpCells, [curRow, 1, s]);
       conflicts += Format(#9'.Range(C(1, %d, %d, %0:d)).Merge'#13#10, [curRow, 3]);
       curRow += 1;
     end;
+
     conflicts += Format(#9'.Range(C(1, %d, %d, %d)).Borders.Color = RGB(105, 105, 105)', [j, 3, curRow-1]);
     curRow += 2;
   end else
@@ -140,11 +173,14 @@ begin
       maxCount := max(maxCount, Length(ACells[j][i].Items));
     for j:= 0 to High(ACells) do
       for k:= 0 to maxCount-1 do begin
-        if k < Length(ACells[j][i].Items) Then
-          s := StringsReplace(ACells[j][i].Items[k].content, [#13#10], ['"&vbCrLf&"'], [rfReplaceAll])
-        else
-          s := '';
-        if s <> '' Then table += Format(dpCells, [curRow+k+1, j+1, s]);
+        if k < Length(ACells[j][i].Items) Then begin
+          s := GetCell(ACells[j][i].Items[k], len);
+          table += Format(dpCells, [curRow+k+1, j+1,
+            StringsReplace(s, [#13#10], ['"&vbCrLf&"'], [rfReplaceAll])]);
+          if len <> UTF8Length(s) Then
+            table += Format(#9'.Cells(%d, %d).Characters(%d, %d).Font.Color = -16776961'#13#10,
+              [curRow+k+1, j+1, len+1, UTF8Length(s)-len+1]);
+        end;
       end;
     table += Format(#9'.Range(C(1, %d, 1, %d)).Merge'#13#10, [curRow+1, curRow+maxCount]);
     curRow += maxCount;
@@ -163,8 +199,9 @@ procedure ExportToHTML(ATitle: string; ACaptionH, ACaptionV, ACaptionS: string;
   TableId: integer; AFilterState: TFilterState; ACells: TOLAPCells);
 var
   fileName, table, information, filters, conflicts, s: string;
-  i, j, k: integer;
+  i, j, k, l: integer;
   content: TStringList;
+  ctype: TConflictType;
 begin
   fileName := GetFileName('Веб-страница (*.htm;*.html)|*.htm;*.html|', 'Безымянный.html');
   if fileName = '' Then exit;
@@ -196,7 +233,15 @@ begin
       table += '  <td>';
       for k:= 0 to High(ACells[i][j].Items) do begin
         if k <> 0 Then table += '<hr>';
-        table += StringsReplace(ACells[i][j].Items[k].content, [#13#10], ['<br>'], [rfReplaceAll]);
+        with ACells[i][j].Items[k] do begin;
+          table += StringsReplace(content, [#13#10], ['<br>'], [rfReplaceAll]);
+          if Length(conflictids) <> 0 Then table += '<br>'+'<span class="conflicts">'+dpLabelConflictsCell;
+          for l:= 0 to High(conflictids) do begin
+            if l <> 0 Then table += ',';
+            table += ' <a href="#conflicts">'+intToStr(conflictids[l]+1)+'</a>';
+          end;
+          if Length(conflictids) <> 0 Then table += '</span>'#13#10;
+        end;
       end;
       table += '</td>'#13#10;
     end;
@@ -204,15 +249,21 @@ begin
   end;
   table += '</table>';
 
-  ConflictsFinder.UpdateConflicts;
   if ConflictsFinder.Count <> 0 Then begin
     conflicts := '<h2>'+dpLabelConflictsFound+'</h2>'#13#10'<table>'#13#10;
+    s := '';
+    ctype := TConflictType(-1);
     for i:= 0 to ConflictsFinder.Count - 1 do begin
-      s := ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)+' '+ConflictsFinder[i].name;
-      for j:= 0 to High(ConflictsFinder[i].cells) do
-        s += ' '+intToStr(ConflictsFinder[i].cells[j]);
-      conflicts += '  <tr><td>'+s+'</td></tr>'#13#10;
+      if ConflictsFinder[i].ctype <> ctype Then begin
+        if s <> '' Then conflicts += '  <tr><td>'+s+'</td></tr>'#13#10;
+        conflicts += '  <tr><td>'+ConflictsFinder.GetConflictTypeName(ConflictsFinder[i].ctype)+'</td></tr>'#13#10;
+        ctype := ConflictsFinder[i].ctype;
+        s := dpLabelConflictsNumber;
+      end;
+      if (s <> dpLabelConflictsNumber) and (i <> 0)  Then s += ',';
+      s += ' '+intToStr(i+1);
     end;
+    if s <> '' Then conflicts += '  <tr><td>'+s+'</td></tr>'#13#10;
     conflicts += '</table>';
   end else
     conflicts := dpLabelConflictsNotFound;

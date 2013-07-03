@@ -1,10 +1,10 @@
 inherited FormEdit: TFormEdit
-  Left = 187
-  Height = 246
-  Top = 466
+  Left = 396
+  Height = 486
+  Top = 195
   Width = 349
   Caption = 'Редактирование поля'
-  ClientHeight = 246
+  ClientHeight = 486
   ClientWidth = 349
   Constraints.MinHeight = 100
   Constraints.MinWidth = 100
@@ -14,7 +14,7 @@ inherited FormEdit: TFormEdit
   object PanelButtons: TPanel[0]
     Left = 0
     Height = 34
-    Top = 212
+    Top = 452
     Width = 349
     Align = alBottom
     BevelOuter = bvNone
@@ -47,21 +47,34 @@ inherited FormEdit: TFormEdit
   end
   object ScrollBox: TScrollBox[1]
     Left = 0
-    Height = 188
+    Height = 426
     Top = 0
     Width = 349
     HorzScrollBar.Page = 349
-    VertScrollBar.Page = 188
+    VertScrollBar.Page = 426
     Align = alClient
     BorderStyle = bsNone
+    ClientHeight = 426
+    ClientWidth = 349
     Color = clWhite
     ParentColor = False
     TabOrder = 1
+    object DBGrid1: TDBGrid
+      Left = 0
+      Height = 164
+      Top = 262
+      Width = 349
+      Align = alBottom
+      Color = clWindow
+      Columns = <>
+      DataSource = Datasource
+      TabOrder = 0
+    end
   end
   object LabelError: TLabel[2]
     Left = 5
-    Height = 14
-    Top = 193
+    Height = 16
+    Top = 431
     Width = 339
     Align = alBottom
     BorderSpacing.Around = 5

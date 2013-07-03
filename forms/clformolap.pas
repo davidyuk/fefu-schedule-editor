@@ -8,7 +8,8 @@ uses
   Classes, SysUtils, FileUtil, RTTICtrls, Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Grids, CheckLst, CLFormChild, CLMetadata, CLOLAPGrid,
   CLExport, CLOLAPCell, CLOLAPCellButton, CLOLAPTypes, CLFormEdit, CLFormTable,
-  CLFormContainer, math, sqldb, db, CLDatabase, CLFilter, CLConflicts;
+  CLFormContainer, math, sqldb, db, CLDatabase, CLFilter, CLConflicts,
+  CLDatabaseFunctions;
 
 type
 
@@ -116,6 +117,7 @@ begin
   ComboBoxS.ItemIndex := 3;
   OLAPGrid.ShowEmpty:= CheckBoxEmpty.Checked;
   OLAPGrid.ShowNames:= CheckBoxNames.Checked;
+  OLAPGrid.ShowConflicts:= CheckBoxConflicts.Checked;
   AxisChange(Nil);
 end;
 
@@ -141,12 +143,10 @@ end;
 procedure TFormOLAP.OLAPCallback(Sender: TObject);
 var
   i: Integer;
-  s: String;
   OLAPButton: TOLAPCellButton;
   OLAPCell: TOLAPCell;
   FormEdit: TFormEdit;
   FormTable: TFormTable;
-  SQLQuery: TSQLQuery;
   FilterState: TFilterState;
 begin
   OLAPButton := TOLAPCellButton(Sender);
@@ -177,12 +177,8 @@ begin
     obRemove: begin
       if MessageDlg('Подтверждение удаления записи', 'Вы действительно хотите удалить запись?'+#13#10
         +OLAPCell.Items[OLAPCell.ItemHover].content, mtWarning, mbOKCancel, 0) = mrCancel Then Exit;
-      SQLQuery := TSQLQuery.Create(nil); { TODO: нужно перенести в отдельную функцию }
-      SQLQuery.Transaction := Transaction;
-      SQLQuery.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+IntToStr(OLAPButton.ItemId);
-      SQLQuery.ExecSQL;
-      Transaction.Commit;
-      SQLQuery.Free;
+      FormContainer.BeforeRefreshSQLContent;
+      DeleteRecord(Metadata[TableId].name, OLAPButton.ItemId);
       FormContainer.RefreshSQLContent;
     end;
     obOpenTable: begin
@@ -212,19 +208,15 @@ begin
 end;
 
 function TFormOLAP.GetConflictInformation(ACell: TOLAPCell): String;
-var i, j: integer;
+var i: integer;
 begin
   Result := '';
   with ACell do begin
     if (ItemHover = -1) or (Length(Items[ItemHover].conflictids) = 0) Then exit;
     Result := 'Описание конфликта:';
     for i:= 0 to High(Items[ItemHover].conflictids) do
-      with ConflictsFinder[Items[ItemHover].conflictids[i]] do begin
+      with ConflictsFinder[Items[ItemHover].conflictids[i]] do
         Result += #13#10 + ConflictsFinder.GetConflictTypeName(ctype);
-        Result += #13#10 + name + #13#10'Ячейки:';
-        for j:= 0 to High(cells) do
-          Result += ' '+intToStr(cells[j]);
-      end;
   end;
 end;
 
@@ -255,7 +247,6 @@ end;
 procedure TFormOLAP.DrawGridDragDrop(Sender, Source: TObject; X, Y: Integer);
 var
   SQLQuery: TSQLQuery;
-  Datasource: TDataSource;
   Col, Row: integer;
 begin
   DrawGrid.MouseToCell(X, Y, Col, Row);
@@ -280,7 +271,7 @@ procedure TFormOLAP.DrawGridDragOver(Sender, Source: TObject; X, Y: Integer;
 var Col, Row: integer;
 begin
   DrawGrid.MouseToCell(MousePosition.x, MousePosition.y, Col, Row);
-  Accept := (Sender = Source) and ((DragCell.x <> Col) or (DragCell.y <> Row)) or (Sender = FCellHint);
+  Accept := (Sender = Source) and (Col <> 0) and (Row <> 0) and ((DragCell.x <> Col) or (DragCell.y <> Row)) or (Sender = FCellHint);
 end;
 
 procedure TFormOLAP.DrawGridMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -290,10 +281,17 @@ var
   Cell: TPoint;
 begin
   MousePosition := Point(X, Y);
-  for i:= 0 to High(FCells) do
-    for j:= 0 to High(FCells[0]) do
-      FCells[i][j].MouseMove(x, y);
   DrawGrid.MouseToCell(X, Y, Cell.x, Cell.y);
+  for i:= 0 to High(FCells) do
+    for j:= 0 to High(FCells[0]) do begin
+      FCells[i][j].MouseMove(x, y);
+      if OLAPGrid.ShowConflicts Then with FCells[Cell.x][Cell.y] do begin
+        if (ItemHover = -1) Then begin
+          if (i <> 0) and (j <> 0) then FCells[i][j].CheckConflictInItems([])
+        end else
+          if (i <> 0) and (j <> 0) then FCells[i][j].CheckConflictInItems(Items[ItemHover].conflictids)
+      end;
+    end;
   LabelAdditional.Caption := GetConflictInformation(FCells[Cell.x][Cell.y]);
   DrawGrid.Invalidate;
 end;
@@ -420,9 +418,22 @@ end;
 
 procedure TFormOLAP.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
+var i, j: integer;
 begin
   MousePosition := Point(X, Y);
   FCellHint.MouseMove(X, Y);
+  if OLAPGrid.ShowConflicts Then begin
+    for i:= 0 to High(FCells) do
+      for j:= 0 to High(FCells[0]) do
+        with FCellHint do
+          if (ItemHover = -1) Then
+            if (i <> 0) and (j <> 0) then FCells[i][j].CheckConflictInItems([])
+          else
+            if (i <> 0) and (j <> 0) then FCells[i][j].CheckConflictInItems(Items[ItemHover].conflictids);
+    with FCellHint do
+      if (ItemHover = -1) Then CheckConflictInItems([])
+      else CheckConflictInItems(Items[ItemHover].conflictids);
+  end;
   PaintBox.Invalidate;
   LabelAdditional.Caption := GetConflictInformation(FCellHint);
 end;

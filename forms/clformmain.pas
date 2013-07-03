@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, ExtCtrls, ComCtrls, StdCtrls,
   Menus, CLDatabase, CLMetadata, CLFormContainer, CLFormTable, CLFormOLAP,
-  Graphics, CLFormConflicts;
+  Graphics, CLFormConflicts, CLConflicts;
 
 type
 
@@ -38,7 +38,7 @@ type
     TreeRootQuery: TTreeNode;
     FormTableArr: array of TFormTable;
   public
-    { public declarations }
+    procedure UpdateConflictsCount;
   end;
 
 var
@@ -84,6 +84,7 @@ begin
         exit;
       end;
     end;
+    FormContainer.RefreshSQLContent;
     SetLength(FormTableArr, Metadata.TableCount);
     TreeView.Enabled:=True;
     TreeRootQuery := TreeView.Items.Add(nil, 'Таблицы');
@@ -102,6 +103,7 @@ begin
     Connection.Connected := false;
     ButtonShowFormSchedule.Enabled := False;
     ButtonShowFormConflicts.Enabled := False;
+    ButtonShowFormConflicts.Caption := 'Отобразить конфликты';
   end;
 end;
 
@@ -142,6 +144,13 @@ begin
       if setActive Then TreeRootQuery.Items[i].ImageIndex := 1
       else TreeRootQuery.Items[i].ImageIndex := -1
   end;
+end;
+
+procedure TFormMain.UpdateConflictsCount;
+begin
+  ButtonShowFormConflicts.Caption := 'Отобразить конфликты';
+  if ConflictsFinder.Count <> 0 Then
+    ButtonShowFormConflicts.Caption := ButtonShowFormConflicts.Caption+' ('+IntToStr(ConflictsFinder.Count)+')';
 end;
 
 procedure TFormMain.FormTableClose(Sender: TObject;

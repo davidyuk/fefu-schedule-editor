@@ -7,7 +7,8 @@ interface
 uses
   Classes, Controls, Forms, DBGrids, sysutils,
   ExtCtrls, StdCtrls, Buttons, sqldb, db, Dialogs, CLFilter,
-  CLDatabase, CLMetadata, CLFormChild, CLFormEdit, CLFormContainer;
+  CLDatabase, CLMetadata, CLFormChild, CLFormEdit, CLFormContainer,
+  CLDatabaseFunctions;
 
 type
 
@@ -33,7 +34,6 @@ type
     procedure FilterApply;
   public
     procedure RefreshSQLContent; override;
-    procedure BeforeRefreshSQLContent; override;
     procedure SetFilterState(FilterState: TFilterState);
     procedure SetDisplayRecordIds(Ids: array of integer);
     constructor Create(TheOwner: TComponent; ATableId: integer); virtual;
@@ -67,11 +67,6 @@ begin
   RefreshColumns;
 end;
 
-procedure TFormTable.BeforeRefreshSQLContent;
-begin
-
-end;
-
 procedure TFormTable.SetFilterState(FilterState: TFilterState);
 begin
   Filter.SetPanelsState(FilterState, True);
@@ -86,8 +81,7 @@ begin
     DisplayRecordIdSQLPart += format('%s.%s = %d',
       [Metadata[TableId].name, Metadata[TableId].Columns[0].name, Ids[i]]);
   end;
-  if DisplayRecordIdSQLPart <> '' Then
-    DisplayRecordIdSQLPart := '('+DisplayRecordIdSQLPart+')';
+  DisplayRecordIdSQLPart := '('+DisplayRecordIdSQLPart+')';
 end;
 
 constructor TFormTable.Create(TheOwner: TComponent; ATableId: integer);
@@ -113,7 +107,6 @@ end;
 procedure TFormTable.FilterApply;
 var
   i: integer;
-  s: string;
   sArr: array of string;
 begin
   SQLQuery.Close;
@@ -132,28 +125,18 @@ end;
 
 procedure TFormTable.ButtonRemoveClick(Sender: TObject);
 var
-  i: integer;
-  s, id: string;
-  SQLQueryL: TSQLQuery;
+  i, id: integer;
+  s: string;
 begin
-{ TODO : Надо спросить у пользователя, если он удаляет запись из справочника: присвоить этому полю значение Null; удалить все записи ссылающиеся на эту; установить всем записям, ссылающимся на эту значение Null }
-  id := Datasource.DataSet.Fields.Fields[0].DisplayText;
-  if id = '' Then exit;
+  id := Datasource.DataSet.Fields.Fields[0].AsInteger;
   s:= '';
   for i:= 0 to Datasource.DataSet.Fields.Count-1 do
     s+= #13#10+DBGrid.DataSource.DataSet.Fields[i].DisplayLabel+': '+Datasource.DataSet.Fields.Fields[i].DisplayText;
   if MessageDlg('Подтверждение удаления записи', 'Вы действительно хотите удалить запись?'+
   s, mtWarning, mbOKCancel, 0) = mrOK Then begin
-    SQLQueryL := TSQLQuery.Create(Nil);
-    SQLQueryL.Transaction := Transaction;
-    SQLQueryL.SQL.Text := 'DELETE from '+Metadata[TableId].name+' WHERE id = '+id;
-    SQLQueryL.ExecSQL;
     FormContainer.BeforeRefreshSQLContent;
-    Transaction.Commit;
+    DeleteRecord(Metadata[TableId].name, id);
     FormContainer.RefreshSQLContent;
-    SQLQueryL.Free;
-    SQLQuery.Open;
-    RefreshColumns;
   end;
 end;
 

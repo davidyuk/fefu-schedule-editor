@@ -28,6 +28,7 @@ type
     FWidth, FHeight, FItemHover, FItemHoverFixed: integer;
     FItems: array of TCellItem;
     FItemsTop: array of integer;
+    FConflictHighLight: array of boolean;
     FButtons: array of TOLAPCellButton;
     FFixed, FHover: Boolean;
     FRect: TRect;
@@ -44,6 +45,7 @@ type
     function GetText: string;
     function FixItemHovered:integer;
     procedure UnFixItemHovered;
+    procedure CheckConflictInItems(AConflictIdArr: array of integer);
     procedure AddItem(AID: integer; AContent: string; AConflictIds: array of integer);
     procedure Draw(ACanvas: TCanvas; ARect: TRect; ShowButtonFull: Boolean);
     procedure UpdateSize(ACanvas: TCanvas);
@@ -73,6 +75,7 @@ begin
   end;
   if FFixed Then Exit;
   setLength(FItemsTop, Length(FItems)+1);
+  setLength(FConflictHighLight, Length(FItems));
   setLength(FButtons, Length(FButtons)+2);
   FButtons[High(FButtons)-1] := TOLAPCellButtonEdit.Create(Self, AID, FCallback);
   FButtons[High(FButtons)] := TOLAPCellButtonRemove.Create(Self, AID, FCallback);
@@ -98,6 +101,22 @@ end;
 procedure TOLAPCell.UnFixItemHovered;
 begin
   FItemHoverFixed := -1;
+end;
+
+procedure TOLAPCell.CheckConflictInItems(AConflictIdArr: array of integer);
+var i, j, k: integer; f: boolean;
+begin
+  for i:= 0 to High(FItems) do begin
+    FConflictHighLight[i] := false;
+    for k:= 0 to high(AConflictIdArr) do begin
+      for j:= 0 to High(FItems[i].conflictids) do begin
+        f := FItems[i].conflictids[j] = AConflictIdArr[k];
+        FConflictHighLight[i] := f;
+        if f Then break;
+      end;
+      if f then break;
+    end;
+  end;
 end;
 
 procedure TOLAPCell.Draw(ACanvas: TCanvas; ARect: TRect;
@@ -131,8 +150,9 @@ begin
     end;
     StringList.Text := content;
     if length(conflictids) <> 0 Then begin
-      ACanvas.Brush.Color := RGBToColor(255, 200, 200);
       ACanvas.Brush.Style := bsBDiagonal;
+      if FConflictHighLight[i] Then ACanvas.Brush.Color := RGBToColor(255, 108, 45)
+      else ACanvas.Brush.Color := RGBToColor(255, 241, 45);
       ACanvas.FillRect(FRect.Left, FRect.Top + FItemsTop[i], FRect.Right, FRect.Top + FItemsTop[i+1]);
       ACanvas.Brush.Style := bsSolid;
     end;

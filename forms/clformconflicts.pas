@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, CLFormChild, CLConflicts, CLFormContainer, CLFormTable;
+  ExtCtrls, ComCtrls, CLFormChild, CLConflicts, CLFormContainer, CLFormTable,
+  CLMetadata;
 
 type
 
@@ -21,6 +22,7 @@ type
     RootNodes: array of TTreeNode;
   public
     procedure RefreshSQLContent; override;
+    constructor Create(TheOwner: TComponent); override;
   end;
 
 
@@ -40,8 +42,9 @@ var FormTable: TFormTable;
 begin
   if not Assigned(TreeViewConflicts.Selected) Then exit;
   if TreeViewConflicts.Selected.Data = Nil Then exit;
-  FormTable := TFormTable.Create(Application, ConflictsFinder.TableId);
-  FormTable.SetDisplayRecordIds(ConflictsFinder[Integer(TreeViewConflicts.Selected.Data)].cells);
+  FormTable := TFormTable.Create(Application, FTableId);
+  FormTable.SetDisplayRecordIds(ConflictsFinder[Integer(TreeViewConflicts.Selected.Data)-1].cells);
+  FormTable.Caption := FormTable.Caption + ', конфликт: ' + TreeViewConflicts.Selected.Parent.Text;
   FormContainer.AddForm(FormTable);
 end;
 
@@ -51,7 +54,6 @@ var
   i, j: integer;
   s: String;
 begin
-  ConflictsFinder.UpdateConflicts;
   TreeViewConflicts.Items.Clear;
   for t in TConflictType do begin
     SetLength(RootNodes, Length(RootNodes)+1);
@@ -59,16 +61,19 @@ begin
     RootNodes[Ord(t)].Data := Nil;
   end;
   for i:= 0 to ConflictsFinder.Count-1 do begin
-    s := ConflictsFinder[i].name + ', ячейки:';
+    s := 'ID записей:';
     with ConflictsFinder[i] do
       for j:= 0 to High(cells) do
         s += ' ' + IntToStr(cells[j]);
-    TreeViewConflicts.Items.AddChildObject(RootNodes[Ord(ConflictsFinder[i].ctype)], s, Pointer(PtrInt(i)));
+    TreeViewConflicts.Items.AddChildObject(RootNodes[Ord(ConflictsFinder[i].ctype)], s, Pointer(PtrInt(i)+1));
+    //Pointer(PtrInt(i)) = Nil O_O
   end;
-  for t in TConflictType do begin
-    RootNodes[Ord(t)].Expand(True);
-    RootNodes[Ord(t)].AlphaSort;
-  end;
+end;
+
+constructor TFormConflicts.Create(TheOwner: TComponent);
+begin
+  inherited Create(TheOwner);
+  FTableId := Metadata.GetTableId('SCHEDULE_ITEMS');
 end;
 
 end.

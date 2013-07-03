@@ -16,7 +16,7 @@ type
     Size = 16;
   protected
     FIcon: TPortableNetworkGraphic;
-    {FTiedItemId, }FLeft, FTop, FItemId: Integer;
+    FLeft, FTop, FItemId: Integer;
     FButtonKind: TOLAPButtonKind;
     FHover, FVisible: Boolean;
     FCallback: TOLAPButtonCallback;

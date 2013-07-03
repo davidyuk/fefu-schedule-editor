@@ -40,7 +40,7 @@ object FormMain: TFormMain
     Width = 188
     Align = alClient
     AutoExpand = True
-    DefaultItemHeight = 16
+    DefaultItemHeight = 18
     ReadOnly = True
     ScrollBars = ssAutoBoth
     TabOrder = 1

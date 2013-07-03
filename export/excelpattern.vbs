@@ -5,9 +5,9 @@ Function C(i, j, k, l)
   C = chr(Asc("A")+i-1)&j&":"&chr(Asc("A")+k-1)&l
 end function
 
-Set WshShell = WScript.CreateObject("WScript.Shell")
-strFileName = WshShell.CurrentDirectory&"\"&_
-  Replace(WScript.ScriptName, ".vbs", ".xlsx")
+rem Set WshShell = WScript.CreateObject("WScript.Shell")
+rem strFileName = WshShell.CurrentDirectory&"\"&_
+rem   Replace(WScript.ScriptName, ".vbs", ".xlsx")
 
 Set objExcel = CreateObject("Excel.Application")
 objExcel.Visible = False
@@ -52,6 +52,7 @@ With objExcel.Range(C(1, 1, GridW, 1))
 End With
 
 objExcel.Worksheets(1).Activate
-objWorkbook.SaveAs(strFileName)
-objExcel.Quit
-MsgBox "Создание файла завершено успешно."&vbCrLf&strFileName
+rem objWorkbook.SaveAs(strFileName)
+rem objExcel.Quit
+rem MsgBox "Создание файла завершено успешно."&vbCrLf&strFileName
+objExcel.Visible = True

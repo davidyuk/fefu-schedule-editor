@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls,  sqldb,
-  CLFormChild;
+  CLFormChild, CLConflicts;
 
 type
 
@@ -27,6 +27,8 @@ var
   FormContainer: TFormContainer;
 
 implementation
+
+uses CLFormMain;
 
 { TFormContainer }
 
@@ -53,6 +55,8 @@ end;
 procedure TFormContainer.RefreshSQLContent;
 var i: integer;
 begin
+  ConflictsFinder.UpdateConflicts;
+  FormMain.UpdateConflictsCount;
   for i:= 0 to High(Forms) do
     Forms[i].RefreshSQLContent;
 end;
@@ -67,7 +71,7 @@ end;
 procedure TFormContainer.Clear;
 var i: integer;
 begin
-  for i:= 0 to high(Forms) do begin
+  for i:= high(Forms) downto 0 do begin
     Forms[i].Close;
   end;
   setlength(Forms, 0);

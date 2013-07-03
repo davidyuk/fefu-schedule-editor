@@ -5,39 +5,34 @@ unit CLConflicts;
 interface
 
 uses
-  Classes, SysUtils, db, sqldb, CLMetadata, CLDatabase, Dialogs, Types;
+  Classes, SysUtils, db, sqldb, CLDatabase, Types, contnrs;
 
 type
 
-  arrOfInteger = array of integer;
-//  TIntegerDynArray
-
-  TConflictType = (ctSameFields);
+  TConflictType = (ctManyGroups, ctTeacherDifPlace, ctTeacherDifCourses,
+    ctPlaceDifTeacher, ctPlaceDifCourses, ctPlaceOverflow,
+    ctTeacherWrongSubject, ctGroupWrongSubject, ctLessonOverflow);
+  // порядок задаётся на стороне БД в процедуре CONFLICTS
 
   TConflict = record
-    name: String;
-    cells: array of integer;
+    cells: TIntegerDynArray;
     ctype: TConflictType;
   end;
 
   { TConflictsFinder }
 
   TConflictsFinder = class(TComponent)
-  private const
-    TableName = 'schedule_items';
-    DayFieldName = 'day_id';
-    TimeFieldName = 'time_id';
   private
-    FTableId, DayFieldId, TimeFieldId, FCount: integer;
+    FCount: integer;
     FConflicts: array of TConflict;
-    FConflictCellsId: TStringList;
+    FConflictCellsId: TBucketList;
+    FCellsConflicts: array of TIntegerDynArray;
     function GetConflict(AIndex: integer): TConflict;
   public
-    property TableId: Integer read FTableId;
     property Conflicts[AIndex: integer]: TConflict read GetConflict; default;
     property Count: integer read FCount;
     procedure UpdateConflicts;
-    procedure CheckCellId(id: Integer; var arr: arrOfInteger);
+    procedure CheckCellId(id: Integer; var arr: TIntegerDynArray);
     function GetConflictTypeName(ConflictType: TConflictType): String;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -57,123 +52,102 @@ end;
 
 procedure TConflictsFinder.UpdateConflicts;
 var
-  x, y, i, t1: integer;
-  key, t2: String;
+  j: integer;
   SQLQuery: TSQLQuery;
   Datasource: TDataSource;
   StringList: TStringList;
+  procedure AddValToEnd(val, index: integer);
+  var t: integer;
+  begin
+    t:= Length(FCellsConflicts[index]);
+    SetLength(FCellsConflicts[index], t+1);
+    FCellsConflicts[index][t] := val;
+  end;
+  function CreateNewArray(val: integer): integer;
+  begin
+    Result:= Length(FCellsConflicts);
+    SetLength(FCellsConflicts, Result+1);
+    SetLength(FCellsConflicts[Result], 1);
+    FCellsConflicts[Result][0] := val;
+  end;
+
 begin
   SetLength(FConflicts, 0);
-  FConflictCellsId.Clear;
+  SetLength(FCellsConflicts, 0);
+  FConflictCellsId.Free;
+  FConflictCellsId := TBucketList.Create(bl16);
 
   SQLQuery := TSQLQuery.Create(nil);
   Datasource := TDataSource.Create(nil);
   Datasource.DataSet := SQLQuery;
   SQLQuery.Transaction := Transaction;
-  SQLQuery.SQL.Text := GetSelectSQL(FTableId, -1)+' '+GetOrderBySQL(FTableId, [DayFieldId, TimeFieldId], []);
-  //ShowMessage(SQLQuery.SQL.Text);
+  SQLQuery.SQL.Text := 'SELECT CONFLICT_TYPE, SCHEDULE_ITEMS FROM CONFLICTS';
   SQLQuery.Open;
 
+  //Datasource.DataSet.RecordCount; возвращает 10 вместо 102
   StringList := TStringList.Create;
-  x:= -1; y:= -1;
-  while not Datasource.DataSet.EOF do With Datasource.DataSet.Fields do begin
-    if (x <> Fields[DayFieldId].AsInteger) or (y <> Fields[TimeFieldId].AsInteger) Then begin
-      StringList.Clear;
-      x := Fields[DayFieldId].AsInteger;
-      y := Fields[TimeFieldId].AsInteger
-    end;
-    while not Datasource.DataSet.EOF
-      and (x=Fields[DayFieldId].AsInteger)
-      and (y=Fields[TimeFieldId].AsInteger) do begin
-      //Все строки здесь в одно и тоже время
-
-      for i:= 3 To Count-1 do begin
-        key:= format('%d_%s', [i, Fields[i].AsString]);
-        if StringList.Values[key] <> '' Then begin
-          if Copy(StringList.Values[key], 1, 2) <> 'c_' Then begin
-            SetLength(FConflicts, Length(FConflicts)+1);
-            with FConflicts[High(FConflicts)] do begin
-              name := Metadata[FTableId].Columns[i].display;
-              SetLength(cells, 2);
-              cells[0] := StrToInt(StringList.Values[key]);
-              cells[1] := Fields[0].AsInteger;
-              with FConflictCellsId do begin
-                t2:= IntToStr(cells[0]);
-                if Values[t2] <> '' Then Values[t2] := Values[t2]+';';
-                Values[t2] := Values[t2]+intToStr(High(FConflicts));
-                t2:= IntToStr(cells[1]);
-                if Values[t2] <> '' Then Values[t2] := Values[t2]+';';
-                Values[t2] := Values[t2]+intToStr(High(FConflicts));
-              end;
-              ctype := ctSameFields;
-            end;
-            StringList.Values[key] := 'c_'+IntToStr(High(FConflicts));
-          end else begin
-            t1 := StrToInt(Copy(StringList.Values[key], 3, Length(StringList.Values[key])));
-            with FConflicts[t1] do begin
-              SetLength(cells, Length(cells)+1);
-              cells[High(cells)] := Fields[0].AsInteger;
-              with FConflictCellsId do begin
-                t2 := IntToStr(cells[High(cells)]);
-                if Values[t2] <> '' Then Values[t2] := Values[t2]+';';
-                Values[t2] := Values[t2]+intToStr(t1);
-              end;
-            end;
-          end;
-        end else
-          StringList.Values[key] := Fields[0].AsString; //запоминаем id
+  StringList.Delimiter := ',';
+  with Datasource.DataSet do
+    while not EOF do begin
+      SetLength(FConflicts, Length(FConflicts)+1);
+      with FConflicts[High(FConflicts)] do begin
+        ctype := TConflictType(Fields[0].AsInteger);
+        StringList.DelimitedText := Fields[1].AsString;
+        SetLength(cells, StringList.Count);
+        for j:= 0 to StringList.Count-1 do begin
+          cells[j] := StrToInt(StringList[j]);
+          with FConflictCellsId do
+            if Exists(Pointer(cells[j])) Then
+              AddValToEnd(High(FConflicts), Integer(Data[Pointer(cells[j])]))
+            else
+              FConflictCellsId.Add(Pointer(cells[j]), Pointer(CreateNewArray(High(FConflicts))));
+        end;
+        Next;
       end;
-
-      Datasource.DataSet.Next;
     end;
-  end;
+
   FreeAndNil(StringList);
   SQLQuery.Free;
   Datasource.Free;
   FCount := Length(FConflicts);
 end;
 
-procedure TConflictsFinder.CheckCellId(id: Integer; var arr: arrOfInteger);
-var
-  StringList: TStringList;
-  i: integer;
+procedure TConflictsFinder.CheckCellId(id: Integer; var arr: TIntegerDynArray);
 begin
-  StringList := TStringList.Create;
-  StringList.Delimiter := ';';
-  StringList.DelimitedText := FConflictCellsId.Values[intToStr(id)];
-  SetLength(arr, StringList.Count);
-  with StringList do
-    for i:= 0 to Count-1 do
-      arr[i] := StrToInt(Strings[i]);
-  FreeAndNil(StringList);
+  if FConflictCellsId.Exists(Pointer(id)) Then
+    arr := FCellsConflicts[Integer(FConflictCellsId.Data[Pointer(id)])]
+  else
+    SetLength(arr, 0);
 end;
 
 function TConflictsFinder.GetConflictTypeName(ConflictType: TConflictType
   ): String;
 begin
   Case ConflictType of
-    ctSameFields: Result := 'Одинаковые значения поля';
+    ctGroupWrongSubject: Result := 'Группа не изучает этот предмет';
+    ctLessonOverflow: Result := 'У группы много пар';
+    ctManyGroups: Result := 'У группы несколько пар в одно время';
+    ctPlaceDifCourses: Result := 'В аудитории несколько разных предметов';
+    ctPlaceDifTeacher: Result := 'В аудитории несколько разных преподавателей';
+    ctPlaceOverflow: Result := 'Переполнение аудитории';
+    ctTeacherDifCourses: Result := 'Преподаватель ведёт разные предметы';
+    ctTeacherDifPlace: Result := 'Преподаватель в разных аудиториях';
+    ctTeacherWrongSubject: Result := 'Преподаватель не ведёт этот предмет';
   else
-    Exception.Create('Conflict type name not found');
+    Exception.Create('ConflictTypeName not found');
   end;
 end;
 
 constructor TConflictsFinder.Create(AOwner: TComponent);
-var i: integer;
 begin
   inherited Create(AOwner);
-  FConflictCellsId := TStringList.Create;
-  FTableId := Metadata.GetTableId(TableName);
-  for i := 0 to High(Metadata[FTableId].Columns) do begin
-    if Metadata[FTableId].Columns[i].name = DayFieldName Then DayFieldId := i;
-    if Metadata[FTableId].Columns[i].name = TimeFieldName Then TimeFieldId := i;
-  end;
+  FConflictCellsId := TBucketList.Create(bl16);
 end;
 
 destructor TConflictsFinder.Destroy;
 begin
   inherited Destroy;
-  FreeAndNil(FConflictCellsId);
+  FConflictCellsId.Free;
 end;
 
 initialization

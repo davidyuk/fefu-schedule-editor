@@ -126,8 +126,6 @@ begin
   SQLQuery.SQL.Text := SQLQuery.SQL.Text+GetOrderBySQL(FTableId, [FAxisX, FAxisY, FSort], ['id', 'id', 'name']);
   SQLQuery.Open;
 
-  if FShowConflicts Then ConflictsFinder.UpdateConflicts;
-
   x:= 0; y:= 0;
   SetLength(iArr, 0);
   SetLength(UsedX, FStringListX.Count);

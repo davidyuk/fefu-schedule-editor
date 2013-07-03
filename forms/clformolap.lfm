@@ -195,7 +195,9 @@ inherited FormOLAP: TFormOLAP
       Align = alTop
       BorderSpacing.Around = 3
       Caption = 'Отображать конфликты'
+      Checked = True
       OnChange = CheckBoxChange
+      State = cbChecked
       TabOrder = 7
     end
     object LabelAdditional: TLabel
