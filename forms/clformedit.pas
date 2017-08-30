@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Dialogs, DbCtrls,
   ExtCtrls, StdCtrls, CLFormChild, sqldb, db, CLDatabase, CLMetadata,
-  CLFormContainer, Graphics, Buttons, DBGrids;
+  CLFormContainer, Graphics, Buttons;
 
 type
 
@@ -17,7 +17,6 @@ type
     ButtonSaveClose: TButton;
     ButtonCancel: TButton;
     Datasource: TDatasource;
-    DBGrid1: TDBGrid;
     LabelError: TLabel;
     PanelButtons: TPanel;
     ScrollBox: TScrollBox;

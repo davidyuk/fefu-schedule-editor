@@ -59,17 +59,6 @@ inherited FormEdit: TFormEdit
     Color = clWhite
     ParentColor = False
     TabOrder = 1
-    object DBGrid1: TDBGrid
-      Left = 0
-      Height = 164
-      Top = 262
-      Width = 349
-      Align = alBottom
-      Color = clWindow
-      Columns = <>
-      DataSource = Datasource
-      TabOrder = 0
-    end
   end
   object LabelError: TLabel[2]
     Left = 5
